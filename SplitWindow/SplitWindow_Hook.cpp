@@ -25,6 +25,7 @@ void initHook()
 	ATTACH_HOOK_PROC(GetWindow);
 	ATTACH_HOOK_PROC(EnumThreadWindows);
 	ATTACH_HOOK_PROC(EnumWindows);
+	ATTACH_HOOK_PROC(SetWindowLongA);
 
 	if (DetourTransactionCommit() == NO_ERROR)
 	{
@@ -351,6 +352,25 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, EnumWindows, (WNDENUMPROC enumProc, LPARAM lPa
 	}
 
 	return true_EnumWindows(enumProc, lParam);
+}
+
+IMPLEMENT_HOOK_PROC(LONG, WINAPI, SetWindowLongA, (HWND hwnd, int index, LONG newLong))
+{
+//	MY_TRACE(_T("SetWindowLongA(0x%08X, %d, 0x%08X)\n"), hwnd, index, newLong);
+
+	// 「拡張ツールバー」用。
+	if (index == GWL_HWNDPARENT)
+	{
+		Window* window = Window::getWindow(hwnd);
+
+		if (window)
+		{
+			MY_TRACE(_T("Window が取得できるウィンドウは HWNDPARENT を変更できません\n"));
+			return 0;
+		}
+	}
+
+	return true_SetWindowLongA(hwnd, index, newLong);
 }
 
 IMPLEMENT_HOOK_PROC_NULL(INT_PTR, CALLBACK, ScriptParamDlgProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))

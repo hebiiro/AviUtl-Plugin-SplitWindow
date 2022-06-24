@@ -34,7 +34,6 @@ void Window::init(HWND hwnd)
 
 	// ターゲットの親をフローティングコンテナに変更する。
 	::SetParent(m_hwnd, m_floatContainer->m_hwnd);
-	::SendMessage(m_hwnd, WM_UPDATEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
 
 	// ::SetWindowPos() を呼び出し、フック処理を促す。
 	// コンテナの種類によってはコンテナのウィンドウサイズが調整される。
