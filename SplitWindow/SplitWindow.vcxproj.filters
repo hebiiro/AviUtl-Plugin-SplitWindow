@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="SplitWindow.h" />
+    <ClInclude Include="..\..\Common\AviUtlInternal.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Hook.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MSXML.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Profile.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Tracer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Dialog.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigDialog.h" />
+    <ClInclude Include="..\..\Common\WinUtility.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Element</Filter>
+    </ClInclude>
+    <ClInclude Include="Pane.h">
+      <Filter>Element</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Container.h">
+      <Filter>Element</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SplitWindow.cpp" />
+    <ClCompile Include="SplitWindow_Config_Load.cpp" />
+    <ClCompile Include="SplitWindow_Config_Save.cpp" />
+    <ClCompile Include="ConfigDialog.cpp" />
+    <ClCompile Include="SplitWindow_Hook.cpp" />
+    <ClCompile Include="Window.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Pane.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Container.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_SettingDialog.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_AviUtlWindow.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Container_Spread.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Container_Scroll.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_ExEditWindow.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{177f322b-85e3-40d8-98e7-bca29a16eb22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{3ea7c900-0d8d-4548-950c-bd4c51153a98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Element">
+      <UniqueIdentifier>{ed06563f-ce2e-4e41-9e69-3d7438c8a450}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SplitWindow.rc">
+      <Filter>Framework</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SplitWindow.def">
+      <Filter>Framework</Filter>
+    </None>
+  </ItemGroup>
+</Project>
