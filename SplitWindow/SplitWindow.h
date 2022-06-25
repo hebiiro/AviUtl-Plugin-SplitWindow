@@ -52,6 +52,11 @@ extern int g_borderSnapRange;
 extern COLORREF g_fillColor;
 extern COLORREF g_borderColor;
 extern COLORREF g_hotBorderColor;
+extern COLORREF g_activeCaptionColor;
+extern COLORREF g_activeCaptionTextColor;
+extern COLORREF g_inactiveCaptionColor;
+extern COLORREF g_inactiveCaptionTextColor;
+extern BOOL g_useTheme;
 
 //---------------------------------------------------------------------
 

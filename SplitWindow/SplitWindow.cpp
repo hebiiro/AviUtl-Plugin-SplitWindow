@@ -31,6 +31,11 @@ int g_borderSnapRange = 8;
 COLORREF g_fillColor = RGB(0x99, 0x99, 0x99);
 COLORREF g_borderColor = RGB(0xcc, 0xcc, 0xcc);
 COLORREF g_hotBorderColor = RGB(0x00, 0x00, 0x00);
+COLORREF g_activeCaptionColor = ::GetSysColor(COLOR_HIGHLIGHT);
+COLORREF g_activeCaptionTextColor = RGB(0xff, 0xff, 0xff);
+COLORREF g_inactiveCaptionColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
+COLORREF g_inactiveCaptionTextColor = RGB(0x00, 0x00, 0x00);
+BOOL g_useTheme = FALSE;
 
 //---------------------------------------------------------------------
 
@@ -327,12 +332,27 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 				{
 					// ホットボーダーを描画する。
 
+					// ホットボーダーの矩形を取得できたら
 					RECT rcHotBorder;
 					if (g_hotBorderPane && g_hotBorderPane->getBorderRect(&rcHotBorder))
 					{
-						HBRUSH brush = ::CreateSolidBrush(g_hotBorderColor);
-						::FillRect(dc, &rcHotBorder, brush);
-						::DeleteObject(brush);
+						// テーマを使用するなら
+						if (g_useTheme)
+						{
+							int partId = WP_BORDER;
+							int stateId = CS_ACTIVE;
+
+							// テーマ API を使用してボーダーを描画する。
+							::DrawThemeBackground(g_theme, dc, partId, stateId, &rcHotBorder, 0);
+						}
+						// テーマを使用しないなら
+						else
+						{
+							// ブラシで塗り潰す。
+							HBRUSH brush = ::CreateSolidBrush(g_hotBorderColor);
+							::FillRect(dc, &rcHotBorder, brush);
+							::DeleteObject(brush);
+						}
 					}
 				}
 

@@ -41,6 +41,11 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 			getPrivateProfileColor(element, L"fillColor", g_fillColor);
 			getPrivateProfileColor(element, L"borderColor", g_borderColor);
 			getPrivateProfileColor(element, L"hotBorderColor", g_hotBorderColor);
+			getPrivateProfileColor(element, L"activeCaptionColor", g_activeCaptionColor);
+			getPrivateProfileColor(element, L"activeCaptionTextColor", g_activeCaptionTextColor);
+			getPrivateProfileColor(element, L"inactiveCaptionColor", g_inactiveCaptionColor);
+			getPrivateProfileColor(element, L"inactiveCaptionTextColor", g_inactiveCaptionTextColor);
+			getPrivateProfileBool(element, L"useTheme", g_useTheme);
 		}
 
 		// 一旦すべてのペインをリセットする。

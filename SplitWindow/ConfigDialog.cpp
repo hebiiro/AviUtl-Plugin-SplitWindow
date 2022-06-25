@@ -10,6 +10,12 @@ int showConfigDialog(HWND hwnd)
 	::SetDlgItemInt(dialog, IDC_FILL_COLOR, g_fillColor, FALSE);
 	::SetDlgItemInt(dialog, IDC_BORDER_COLOR, g_borderColor, FALSE);
 	::SetDlgItemInt(dialog, IDC_HOT_BORDER_COLOR, g_hotBorderColor, FALSE);
+	::SetDlgItemInt(dialog, IDC_ACTIVE_CAPTION_COLOR, g_activeCaptionColor, FALSE);
+	::SetDlgItemInt(dialog, IDC_ACTIVE_CAPTION_TEXT_COLOR, g_activeCaptionTextColor, FALSE);
+	::SetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_COLOR, g_inactiveCaptionColor, FALSE);
+	::SetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, g_inactiveCaptionTextColor, FALSE);
+	HWND hwndUseTheme = ::GetDlgItem(dialog, IDC_USE_THEME);
+	Button_SetCheck(hwndUseTheme, g_useTheme);
 
 	::EnableWindow(hwnd, FALSE);
 	int retValue = dialog.doModal();
@@ -22,6 +28,11 @@ int showConfigDialog(HWND hwnd)
 	g_fillColor = ::GetDlgItemInt(dialog, IDC_FILL_COLOR, 0, FALSE);
 	g_borderColor = ::GetDlgItemInt(dialog, IDC_BORDER_COLOR, 0, FALSE);
 	g_hotBorderColor = ::GetDlgItemInt(dialog, IDC_HOT_BORDER_COLOR, 0, FALSE);
+	g_activeCaptionColor = ::GetDlgItemInt(dialog, IDC_ACTIVE_CAPTION_COLOR, 0, FALSE);
+	g_activeCaptionTextColor = ::GetDlgItemInt(dialog, IDC_ACTIVE_CAPTION_TEXT_COLOR, 0, FALSE);
+	g_inactiveCaptionColor = ::GetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_COLOR, 0, FALSE);
+	g_inactiveCaptionTextColor = ::GetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, 0, FALSE);
+	g_useTheme = Button_GetCheck(hwndUseTheme);
 
 	// レイアウトを再計算する。
 	calcLayout();
@@ -62,6 +73,10 @@ INT_PTR ConfigDialog::onDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 			case IDC_FILL_COLOR:
 			case IDC_BORDER_COLOR:
 			case IDC_HOT_BORDER_COLOR:
+			case IDC_ACTIVE_CAPTION_COLOR:
+			case IDC_ACTIVE_CAPTION_TEXT_COLOR:
+			case IDC_INACTIVE_CAPTION_COLOR:
+			case IDC_INACTIVE_CAPTION_TEXT_COLOR:
 				{
 					HWND control = (HWND)lParam;
 
@@ -95,6 +110,10 @@ INT_PTR ConfigDialog::onDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 			case IDC_FILL_COLOR:
 			case IDC_BORDER_COLOR:
 			case IDC_HOT_BORDER_COLOR:
+			case IDC_ACTIVE_CAPTION_COLOR:
+			case IDC_ACTIVE_CAPTION_TEXT_COLOR:
+			case IDC_INACTIVE_CAPTION_COLOR:
+			case IDC_INACTIVE_CAPTION_TEXT_COLOR:
 				{
 					DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
 

@@ -23,6 +23,11 @@
 #define IDC_FILL_COLOR                  1018
 #define IDC_BORDER_COLOR                1019
 #define IDC_HOT_BORDER_COLOR            1020
+#define IDC_ACTIVE_CAPTION_COLOR        1021
+#define IDC_ACTIVE_CAPTION_TEXT_COLOR   1022
+#define IDC_INACTIVE_CAPTION_COLOR      1023
+#define IDC_INACTIVE_CAPTION_TEXT_COLOR 1024
+#define IDC_USE_THEME                   1025
 
 // Next default values for new objects
 // 
@@ -31,7 +36,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

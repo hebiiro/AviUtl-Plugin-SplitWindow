@@ -403,7 +403,23 @@ void Pane::drawBorder(HDC dc, HBRUSH brush)
 		{
 			RECT rc;
 			if (getBorderRect(&rc))
-				::FillRect(dc, &rc, brush);
+			{
+				// テーマを使用するなら
+				if (g_useTheme)
+				{
+					int partId = WP_BORDER;
+					int stateId = CS_INACTIVE;
+
+					// テーマ API を使用してボーダーを描画する。
+					::DrawThemeBackground(g_theme, dc, partId, stateId, &rc, 0);
+				}
+				// テーマを使用しないなら
+				else
+				{
+					// ブラシで塗り潰す。
+					::FillRect(dc, &rc, brush);
+				}
+			}
 
 			for (auto& child : m_children)
 			{
@@ -430,15 +446,43 @@ void Pane::drawCaption(HDC dc)
 		WCHAR text[MAX_PATH] = {};
 		::GetWindowTextW(m_window->m_hwnd, text, MAX_PATH);
 
-		// ウィンドウの状態から stateId を取得する。
-		int stateId = CS_ACTIVE;
-		if (::GetFocus() != m_window->m_hwnd) stateId = CS_INACTIVE;
-		if (!::IsWindowEnabled(m_window->m_hwnd)) stateId = CS_DISABLED;
+		// テーマを使用するなら
+		if (g_useTheme)
+		{
+			// ウィンドウの状態から stateId を取得する。
+			int stateId = CS_ACTIVE;
+			if (::GetFocus() != m_window->m_hwnd) stateId = CS_INACTIVE;
+			if (!::IsWindowEnabled(m_window->m_hwnd)) stateId = CS_DISABLED;
 
-		// テーマ API を使用してタイトルを描画する。
-		::DrawThemeBackground(g_theme, dc, WP_CAPTION, stateId, &rc, 0);
-		::DrawThemeText(g_theme, dc, WP_CAPTION, stateId,
-			text, ::lstrlenW(text), DT_CENTER | DT_VCENTER | DT_SINGLELINE, 0, &rc);
+			// テーマ API を使用してタイトルを描画する。
+			::DrawThemeBackground(g_theme, dc, WP_CAPTION, stateId, &rc, 0);
+			::DrawThemeText(g_theme, dc, WP_CAPTION, stateId,
+				text, ::lstrlenW(text), DT_CENTER | DT_VCENTER | DT_SINGLELINE, 0, &rc);
+		}
+		// テーマを使用しないなら
+		else
+		{
+			// 直接 GDI を使用して描画する。
+
+			COLORREF captionColor = g_activeCaptionColor;
+			COLORREF captionTextColor = g_activeCaptionTextColor;
+
+			if (::GetFocus() != m_window->m_hwnd)
+			{
+				captionColor = g_inactiveCaptionColor;
+				captionTextColor = g_inactiveCaptionTextColor;
+			}
+
+			HBRUSH brush = ::CreateSolidBrush(captionColor);
+			::FillRect(dc, &rc, brush);
+			::DeleteObject(brush);
+
+			int bkMode = ::SetBkMode(dc, TRANSPARENT);
+			COLORREF textColor = ::SetTextColor(dc, captionTextColor);
+			::DrawTextW(dc, text, ::lstrlenW(text), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			::SetTextColor(dc, textColor);
+			::SetBkMode(dc, bkMode);
+		}
 
 		return;
 	}
