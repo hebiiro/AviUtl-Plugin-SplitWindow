@@ -7,14 +7,17 @@
 void Pane::resetPane()
 {
 	if (m_window)
+	{
+		m_window->m_pane = 0;
 		m_window->floatWindow();
+	}
 
 	for (auto& child : m_children)
 	{
 		if (!child) continue;
 
 		child->resetPane();
-		child.reset();
+		child = 0;
 	}
 }
 
@@ -33,7 +36,7 @@ void Pane::setSplitMode(int splitMode)
 		}
 	case SplitMode::vert:
 		{
-			m_border = (m_position.left + m_position.right) / 2;
+			m_border = getWidth(m_position) / 2;
 
 			if (!m_children[0]) m_children[0].reset(new Pane());
 			if (!m_children[1]) m_children[1].reset(new Pane());
@@ -42,7 +45,7 @@ void Pane::setSplitMode(int splitMode)
 		}
 	case SplitMode::horz:
 		{
-			m_border = (m_position.top + m_position.bottom) / 2;
+			m_border = getHeight(m_position) / 2;
 
 			if (!m_children[0]) m_children[0].reset(new Pane());
 			if (!m_children[1]) m_children[1].reset(new Pane());
@@ -116,23 +119,45 @@ inline int clamp(int x, int minValue, int maxValue)
 	return x;
 }
 
-int Pane::mirrorX(int x)
+int Pane::absoluteX(int x)
 {
 	switch (m_origin)
 	{
-	case Origin::topLeft: return x;
-	case Origin::bottomRight: return m_position.right - (x - m_position.left) - g_borderWidth;
+	case Origin::topLeft: return m_position.left + x;
+	case Origin::bottomRight: return m_position.right - x - g_borderWidth;
 	}
 
 	return 0;
 }
 
-int Pane::mirrorY(int y)
+int Pane::absoluteY(int y)
 {
 	switch (m_origin)
 	{
-	case Origin::topLeft: return y;
-	case Origin::bottomRight: return m_position.bottom - (y - m_position.top) - g_borderWidth;
+	case Origin::topLeft: return m_position.top + y;
+	case Origin::bottomRight: return m_position.bottom - y - g_borderWidth;
+	}
+
+	return 0;
+}
+
+int Pane::relativeX(int x)
+{
+	switch (m_origin)
+	{
+	case Origin::topLeft: return x - m_position.left;
+	case Origin::bottomRight: return m_position.right - x + g_borderWidth;
+	}
+
+	return 0;
+}
+
+int Pane::relativeY(int y)
+{
+	switch (m_origin)
+	{
+	case Origin::topLeft: return y - m_position.top;
+	case Origin::bottomRight: return m_position.bottom - y + g_borderWidth;
 	}
 
 	return 0;
@@ -155,8 +180,8 @@ void Pane::normalize()
 
 	switch (m_splitMode)
 	{
-	case SplitMode::vert: m_border = clamp(m_border, m_position.left, m_position.right - g_borderWidth); break;
-	case SplitMode::horz: m_border = clamp(m_border, m_position.top, m_position.bottom - g_borderWidth); break;
+	case SplitMode::vert: m_border = clamp(m_border, 0, getWidth(m_position) - g_borderWidth); break;
+	case SplitMode::horz: m_border = clamp(m_border, 0, getHeight(m_position) - g_borderWidth); break;
 	}
 }
 
@@ -190,7 +215,7 @@ void Pane::recalcLayout(LPCRECT rc)
 	{
 	case SplitMode::vert:
 		{
-			int border = mirrorX(m_border);
+			int border = absoluteX(m_border);
 
 			if (m_children[0])
 			{
@@ -210,7 +235,7 @@ void Pane::recalcLayout(LPCRECT rc)
 		}
 	case SplitMode::horz:
 		{
-			int border = mirrorY(m_border);
+			int border = absoluteY(m_border);
 
 			if (m_children[0])
 			{
@@ -231,24 +256,27 @@ void Pane::recalcLayout(LPCRECT rc)
 	}
 }
 
-PanePtr Pane::hitTest(POINT point)
+PanePtr Pane::hitTestPane(POINT point)
 {
+	// point がこのペインの範囲外なら
 	if (!::PtInRect(&m_position, point))
-		return 0;
+		return 0; // ヒットしない。
 
+	// このペインがウィンドウを持つなら
 	if (m_window)
-		return shared_from_this();
+		return shared_from_this(); // ヒットする。
 
 	switch (m_splitMode)
 	{
 	case SplitMode::vert:
 	case SplitMode::horz:
 		{
+			// 子ペインの関数を再帰呼び出しする。
 			for (auto& child : m_children)
 			{
 				if (!child) continue;
 
-				PanePtr retValue = child->hitTest(point);
+				PanePtr retValue = child->hitTestPane(point);
 				if (retValue) return retValue;
 			}
 
@@ -261,29 +289,33 @@ PanePtr Pane::hitTest(POINT point)
 
 PanePtr Pane::hitTestBorder(POINT point)
 {
+	// point がこのペインの範囲外なら
 	if (!::PtInRect(&m_position, point))
-		return 0;
+		return 0; // ヒットしない。
 
+	// このペインがウィンドウを持つなら
 	if (m_window)
-		return 0;
+		return 0; // ヒットしない。
 
 	switch (m_splitMode)
 	{
 	case SplitMode::vert:
 		{
-			int border = mirrorX(m_border);
+			int border = absoluteX(m_border);
 
+			// point がボーダーの範囲内なら
 			if (point.x >= border && point.x < border + g_borderWidth)
-				return shared_from_this();
+				return shared_from_this(); // ヒットする。
 
 			break;
 		}
 	case SplitMode::horz:
 		{
-			int border = mirrorY(m_border);
+			int border = absoluteY(m_border);
 
+			// point がボーダーの範囲内なら
 			if (point.y >= border && point.y < border + g_borderWidth)
-				return shared_from_this();
+				return shared_from_this(); // ヒットする。
 
 			break;
 		}
@@ -293,6 +325,7 @@ PanePtr Pane::hitTestBorder(POINT point)
 		}
 	}
 
+	// 子ペインの関数を再帰呼び出しする。
 	for (auto& child : m_children)
 	{
 		if (!child) continue;
@@ -308,8 +341,8 @@ int Pane::getDragOffset(POINT point)
 {
 	switch (m_splitMode)
 	{
-	case SplitMode::vert: return m_border - mirrorX(point.x);
-	case SplitMode::horz: return m_border - mirrorY(point.y);
+	case SplitMode::vert: return m_border - relativeX(point.x);
+	case SplitMode::horz: return m_border - relativeY(point.y);
 	}
 
 	return 0;
@@ -319,8 +352,8 @@ void Pane::dragBorder(POINT point)
 {
 	switch (m_splitMode)
 	{
-	case SplitMode::vert: m_border = mirrorX(point.x) + m_dragOffset; break;
-	case SplitMode::horz: m_border = mirrorY(point.y) + m_dragOffset; break;
+	case SplitMode::vert: m_border = relativeX(point.x) + m_dragOffset; break;
+	case SplitMode::horz: m_border = relativeY(point.y) + m_dragOffset; break;
 	}
 }
 
@@ -333,7 +366,7 @@ BOOL Pane::getBorderRect(LPRECT rc)
 	{
 	case SplitMode::vert:
 		{
-			int border = mirrorX(m_border);
+			int border = absoluteX(m_border);
 
 			rc->left = border;
 			rc->top = m_position.top;
@@ -344,7 +377,7 @@ BOOL Pane::getBorderRect(LPRECT rc)
 		}
 	case SplitMode::horz:
 		{
-			int border = mirrorY(m_border);
+			int border = absoluteY(m_border);
 
 			rc->left = m_position.left;
 			rc->top = border;
@@ -369,7 +402,8 @@ void Pane::drawBorder(HDC dc, HBRUSH brush)
 	case SplitMode::horz:
 		{
 			RECT rc;
-			if (getBorderRect(&rc)) ::FillRect(dc, &rc, brush);
+			if (getBorderRect(&rc))
+				::FillRect(dc, &rc, brush);
 
 			for (auto& child : m_children)
 			{

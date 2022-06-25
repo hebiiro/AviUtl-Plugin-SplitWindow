@@ -72,7 +72,7 @@ void calcLayout()
 // ペインの設定をするメニューを表示する。
 void showPaneMenu(POINT point)
 {
-	PanePtr pane = g_root->hitTest(point);
+	PanePtr pane = g_root->hitTestPane(point);
 	if (!pane) return;
 
 	HMENU menu = ::CreatePopupMenu();
@@ -415,7 +415,7 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 			{
 				// マウス座標にあるペインを取得する。
-				PanePtr pane = g_root->hitTest(point);
+				PanePtr pane = g_root->hitTestPane(point);
 
 				// クリックされたペインがウィンドウを持っている場合はそのウィンドウにフォーカスを当てる。
 				if (pane && pane->m_window)
@@ -461,7 +461,7 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 			{
 				// マウス座標にあるペインを取得する。
-				PanePtr pane = g_root->hitTest(point);
+				PanePtr pane = g_root->hitTestPane(point);
 
 				// クリックされたペインがウィンドウを持っている場合はそのウィンドウにフォーカスを当てる。
 				if (pane && pane->m_window)

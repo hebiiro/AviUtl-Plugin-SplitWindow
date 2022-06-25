@@ -54,13 +54,15 @@ public:
 	void resetPane();
 	void setSplitMode(int splitMode);
 	void setWindow(WindowPtr window);
-	int mirrorX(int x);
-	int mirrorY(int x);
+	int absoluteX(int x);
+	int absoluteY(int x);
+	int relativeX(int x);
+	int relativeY(int x);
 	RECT getCaptionRect();
 	void normalize();
 	void recalcLayout();
 	void recalcLayout(LPCRECT rc);
-	PanePtr hitTest(POINT point);
+	PanePtr hitTestPane(POINT point);
 	PanePtr hitTestBorder(POINT point);
 	int getDragOffset(POINT point);
 	void dragBorder(POINT point);
