@@ -84,9 +84,7 @@ LRESULT Container::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 
 			PAINTSTRUCT ps = {};
 			HDC dc = ::BeginPaint(hwnd, &ps);
-			HBRUSH brush = ::CreateSolidBrush(g_fillColor);
-			::FillRect(dc, &ps.rcPaint, brush);
-			::DeleteObject(brush);
+			fillBackground(dc, &ps.rcPaint);
 			::EndPaint(hwnd, &ps);
 			return 0;
 		}

@@ -63,6 +63,7 @@ extern BOOL g_useTheme;
 HWND createSingleWindow();
 void calcLayout();
 void showPaneMenu(POINT point);
+void fillBackground(HDC dc, LPCRECT rc);
 LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HRESULT loadConfig();

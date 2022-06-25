@@ -108,9 +108,8 @@ LRESULT Window::onTargetWndProc(Container* container, HWND hwnd, UINT message, W
 			HRGN rgn = ::CreateRectRgnIndirect(&rcClip);
 			::ExtSelectClipRgn(dc, rgn, RGN_DIFF);
 			::DeleteObject(rgn);
-			HBRUSH brush = ::CreateSolidBrush(g_fillColor);
-			::FillRect(dc, &rc, brush);
-			::DeleteObject(brush);
+			fillBackground(dc, &rc);
+			::ExtSelectClipRgn(dc, 0, RGN_COPY);
 			::ReleaseDC(hwnd, dc);
 			return 0;
 		}

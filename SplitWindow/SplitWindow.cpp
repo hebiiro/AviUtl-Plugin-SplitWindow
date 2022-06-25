@@ -160,6 +160,27 @@ void showPaneMenu(POINT point)
 	::DestroyMenu(menu);
 }
 
+void fillBackground(HDC dc, LPCRECT rc)
+{
+	// テーマを使用するなら
+	if (g_useTheme)
+	{
+		int partId = WP_DIALOG;
+		int stateId = 0;
+
+		// テーマ API を使用してボーダーを描画する。
+		::DrawThemeBackground(g_theme, dc, partId, stateId, rc, 0);
+	}
+	// テーマを使用しないなら
+	else
+	{
+		// ブラシで塗りつぶす。
+		HBRUSH brush = ::CreateSolidBrush(g_fillColor);
+		::FillRect(dc, rc, brush);
+		::DeleteObject(brush);
+	}
+}
+
 //---------------------------------------------------------------------
 
 // ファイルからレイアウトをインポートする。
@@ -227,6 +248,8 @@ BOOL exportLayout(HWND hwnd)
 
 	return TRUE;
 }
+
+//---------------------------------------------------------------------
 
 // シングルウィンドウのウィンドウ関数。
 LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -316,9 +339,7 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 				{
 					// 背景を塗りつぶす。
 
-					HBRUSH brush = ::CreateSolidBrush(g_fillColor);
-					FillRect(dc, &rc, brush);
-					::DeleteObject(brush);
+					fillBackground(dc, &rc);
 				}
 
 				{
@@ -348,7 +369,7 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						// テーマを使用しないなら
 						else
 						{
-							// ブラシで塗り潰す。
+							// ブラシで塗りつぶす。
 							HBRUSH brush = ::CreateSolidBrush(g_hotBorderColor);
 							::FillRect(dc, &rcHotBorder, brush);
 							::DeleteObject(brush);

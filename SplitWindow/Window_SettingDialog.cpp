@@ -51,6 +51,19 @@ LRESULT SettingDialog::onContainerWndProc(Container* container, HWND hwnd, UINT 
 
 LRESULT SettingDialog::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	switch (message)
+	{
+	case WM_SIZE:
+		{
+			// 「patch.aul」用。
+			// 設定ダイアログが高速描画されているときは
+			// 親ウィンドウ (コンテナ) を手動で再描画しなければならない。
+			::InvalidateRect(::GetParent(hwnd), 0, FALSE);
+
+			break;
+		}
+	}
+
 	return Window::onTargetWndProc(container, hwnd, message, wParam, lParam);
 }
 
