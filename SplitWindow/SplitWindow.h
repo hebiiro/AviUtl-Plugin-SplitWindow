@@ -77,7 +77,8 @@ HRESULT saveFloatWindow(const MSXML2::IXMLDOMElementPtr& element);
 
 //---------------------------------------------------------------------
 
-DECLARE_HOOK_PROC(LRESULT, WINAPI, SettingDialogProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam));
+DECLARE_HOOK_PROC(LRESULT, WINAPI, ComboBoxProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam));
+DECLARE_HOOK_PROC(LRESULT, WINAPI, TrackBarProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam));
 DECLARE_HOOK_PROC(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR className, LPCSTR windowName, DWORD style, int x, int y, int w, int h, HWND parent, HMENU menu, HINSTANCE instance, LPVOID param));
 DECLARE_HOOK_PROC(BOOL, WINAPI, MoveWindow, (HWND hwnd, int x, int y, int w, int h, BOOL repaint));
 DECLARE_HOOK_PROC(BOOL, WINAPI, SetWindowPos, (HWND hwnd, HWND insertAfter, int x, int y, int w, int h, UINT flags));

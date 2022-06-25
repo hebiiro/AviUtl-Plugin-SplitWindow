@@ -3,9 +3,19 @@
 
 //---------------------------------------------------------------------
 
+WNDPROC getClassProc(LPCWSTR className)
+{
+	WNDCLASSEXW wc = { sizeof(wc) };
+	::GetClassInfoExW(0, className, &wc);
+	return wc.lpfnWndProc;
+}
+
 void initHook()
 {
 	MY_TRACE(_T("initHook()\n"));
+
+	true_ComboBoxProc = getClassProc(WC_COMBOBOXW);
+	true_TrackBarProc = getClassProc(TRACKBAR_CLASSW);
 
 	HMODULE user32 = ::GetModuleHandle(_T("user32.dll"));
 	true_CreateWindowExA = (Type_CreateWindowExA)::GetProcAddress(user32, "CreateWindowExA");
@@ -13,6 +23,8 @@ void initHook()
 	DetourTransactionBegin();
 	DetourUpdateThread(::GetCurrentThread());
 
+	ATTACH_HOOK_PROC(ComboBoxProc);
+	ATTACH_HOOK_PROC(TrackBarProc);
 	ATTACH_HOOK_PROC(CreateWindowExA);
 	ATTACH_HOOK_PROC(MoveWindow);
 	ATTACH_HOOK_PROC(SetWindowPos);
@@ -50,6 +62,32 @@ void addWindowToMap(WindowPtr window, LPCTSTR name, HWND hwnd)
 }
 
 //---------------------------------------------------------------------
+
+IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, ComboBoxProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))
+{
+	switch (message)
+	{
+	case WM_MOUSEWHEEL:
+		{
+			return ::DefWindowProcW(hwnd, message, wParam, lParam);
+		}
+	}
+
+	return true_ComboBoxProc(hwnd, message, wParam, lParam);
+}
+
+IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, TrackBarProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))
+{
+	switch (message)
+	{
+	case WM_MOUSEWHEEL:
+		{
+			return ::DefWindowProcW(hwnd, message, wParam, lParam);
+		}
+	}
+
+	return true_TrackBarProc(hwnd, message, wParam, lParam);
+}
 
 IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR className, LPCSTR windowName, DWORD style, int x, int y, int w, int h, HWND parent, HMENU menu, HINSTANCE instance, LPVOID param))
 {
