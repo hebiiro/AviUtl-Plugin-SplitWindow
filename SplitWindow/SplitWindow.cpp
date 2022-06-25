@@ -75,6 +75,8 @@ void showPaneMenu(POINT point)
 	PanePtr pane = g_root->hitTestPane(point);
 	if (!pane) return;
 
+	BOOL allWindow = ::GetKeyState(VK_SHIFT) < 0;
+
 	HMENU menu = ::CreatePopupMenu();
 
 	::AppendMenu(menu, MF_STRING, CommandID::SPLIT_MODE_NONE, _T("分割なし"));
@@ -93,7 +95,8 @@ void showPaneMenu(POINT point)
 		int index = 1;
 		for (auto& x : g_windowMap)
 		{
-			if (!::IsWindowVisible(x.second->m_hwnd)) continue;
+			if (!allWindow)
+				if (!::IsWindowVisible(x.second->m_hwnd)) continue;
 			::AppendMenu(menu, MF_STRING, CommandID::WINDOW + index, x.first);
 			if (pane->m_window == x.second)
 				::CheckMenuItem(menu, CommandID::WINDOW + index, MF_CHECKED);

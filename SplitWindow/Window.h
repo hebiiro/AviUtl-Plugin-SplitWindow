@@ -21,6 +21,7 @@ public:
 	virtual LRESULT onContainerWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual LRESULT onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+	void showTargetWindow();
 	void dockWindow(LPCRECT rc);
 	void floatWindow();
 

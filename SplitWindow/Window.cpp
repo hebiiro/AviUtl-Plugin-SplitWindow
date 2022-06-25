@@ -159,8 +159,22 @@ LRESULT Window::onTargetWndProc(Container* container, HWND hwnd, UINT message, W
 	return container->onTargetWndProc(hwnd, message, wParam, lParam);
 }
 
+// ターゲットウィンドウを表示する。
+void Window::showTargetWindow()
+{
+	// ターゲットウィンドウが非表示状態なら
+	if (!::IsWindowVisible(m_hwnd))
+	{
+		// ターゲットウィンドウを表示状態にする。
+		// (WM_CLOSE は表示/非表示状態をトグルで切り替える)
+		::SendMessage(m_hwnd, WM_CLOSE, 0, 0);
+	}
+}
+
 void Window::dockWindow(LPCRECT rc)
 {
+	showTargetWindow();
+
 	resizeDockContainer(rc);
 
 	// 親ウィンドウをドッキングコンテナに切り替える。

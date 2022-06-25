@@ -149,6 +149,13 @@ HRESULT loadFloatWindow(const MSXML2::IXMLDOMElementPtr& element)
 			WindowPtr window = it->second;
 
 			getPrivateProfileWindow(floatWindowElement, L"placement", window->m_floatContainer->m_hwnd);
+
+			// フローティングコンテナが表示状態なら
+			if (::IsWindowVisible(window->m_floatContainer->m_hwnd))
+			{
+				// ターゲットウィンドウを表示状態にする。
+				window->showTargetWindow();
+			}
 		}
 	}
 

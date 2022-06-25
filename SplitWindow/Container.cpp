@@ -109,22 +109,16 @@ LRESULT Container::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 		{
+			// ターゲットウィンドウにフォーカスを当てる。
 			::SetFocus(m_window->m_hwnd);
 
 			break;
 		}
 	case WM_COMMAND:
+	case WM_CLOSE:
 		{
+			// メッセージをそのままターゲットウィンドウに転送する。
 			return ::SendMessage(m_window->m_hwnd, message, wParam, lParam);
-
-			break;
-		}
-	case WM_SYSCOMMAND:
-		{
-			if (wParam == SC_CLOSE)
-				return ::SendMessage(m_window->m_hwnd, message, wParam, lParam);
-
-			break;
 		}
 	}
 
