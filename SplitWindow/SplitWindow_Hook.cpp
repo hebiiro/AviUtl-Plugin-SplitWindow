@@ -32,8 +32,9 @@ void initHook()
 	ATTACH_HOOK_PROC(SetMenu);
 	ATTACH_HOOK_PROC(DrawMenuBar);
 
-	ATTACH_HOOK_PROC(FindWindowExA);
+	ATTACH_HOOK_PROC(FindWindowA);
 	ATTACH_HOOK_PROC(FindWindowW);
+	ATTACH_HOOK_PROC(FindWindowExA);
 	ATTACH_HOOK_PROC(GetWindow);
 	ATTACH_HOOK_PROC(EnumThreadWindows);
 	ATTACH_HOOK_PROC(EnumWindows);
@@ -308,15 +309,19 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, DrawMenuBar, (HWND hwnd))
 	return true_DrawMenuBar(hwnd);
 }
 
-IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowExA, (HWND parent, HWND childAfter, LPCSTR className, LPCSTR windowName))
+IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowA, (LPCSTR className, LPCSTR windowName))
 {
-	MY_TRACE(_T("FindWindowExA(0x%08X, 0x%08X, %hs, %hs)\n"), parent, childAfter, className, windowName);
+	MY_TRACE(_T("FindWindowA(%hs, %hs)\n"), className, windowName);
 
-	// 「テキスト編集補助プラグイン」用。
-	if (!parent && className && ::lstrcmpiA(className, "ExtendedFilterClass") == 0)
-		return g_settingDialog->m_hwnd;
+	// 「ショートカット再生」用。
+	if (className && windowName && ::lstrcmpiA(className, "AviUtl") == 0)
+	{
+		auto it = g_windowMap.find(windowName);
+		if (it != g_windowMap.end())
+			return it->second->m_hwnd;
+	}
 
-	return true_FindWindowExA(parent, childAfter, className, windowName);
+	return true_FindWindowA(className, windowName);
 }
 
 IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowW, (LPCWSTR className, LPCWSTR windowName))
@@ -328,6 +333,17 @@ IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowW, (LPCWSTR className, LPCWSTR windo
 		return g_settingDialog->m_hwnd;
 
 	return true_FindWindowW(className, windowName);
+}
+
+IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowExA, (HWND parent, HWND childAfter, LPCSTR className, LPCSTR windowName))
+{
+	MY_TRACE(_T("FindWindowExA(0x%08X, 0x%08X, %hs, %hs)\n"), parent, childAfter, className, windowName);
+
+	// 「テキスト編集補助プラグイン」用。
+	if (!parent && className && ::lstrcmpiA(className, "ExtendedFilterClass") == 0)
+		return g_settingDialog->m_hwnd;
+
+	return true_FindWindowExA(parent, childAfter, className, windowName);
 }
 
 IMPLEMENT_HOOK_PROC(HWND, WINAPI, GetWindow, (HWND hwnd, UINT cmd))

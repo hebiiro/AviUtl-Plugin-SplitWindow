@@ -256,6 +256,14 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 {
 	switch (message)
 	{
+	case WM_SETFOCUS:
+		{
+			MY_TRACE(_T("singleWindowProc(WM_SETFOCUS)\n"));
+
+			::SetFocus(g_aviutlWindow->m_hwnd);
+
+			break;
+		}
 	case WM_COMMAND:
 		{
 			MY_TRACE(_T("singleWindowProc(WM_COMMAND)\n"));
