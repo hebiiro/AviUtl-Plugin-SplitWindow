@@ -264,6 +264,24 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 			break;
 		}
+	case WM_ACTIVATE: // 「patch.aul」用。
+		{
+			MY_TRACE(_T("singleWindowProc(WM_ACTIVATE)\n"));
+
+			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+		}
+	case WM_MENUSELECT: // 「patch.aul」用。
+		{
+			MY_TRACE(_T("singleWindowProc(WM_MENUSELECT)\n"));
+
+			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+		}
+	case WM_CLOSE:
+		{
+			MY_TRACE(_T("singleWindowProc(WM_CLOSE)\n"));
+
+			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+		}
 	case WM_COMMAND:
 		{
 			MY_TRACE(_T("singleWindowProc(WM_COMMAND)\n"));
@@ -297,6 +315,13 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 					break;
 				}
+			case SC_RESTORE:
+			case SC_MINIMIZE: // 「patch.aul」用。
+				{
+					::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+
+					break;
+				}
 			}
 
 			break;
@@ -323,12 +348,6 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			::CloseThemeData(g_theme), g_theme = 0;
 
 			break;
-		}
-	case WM_CLOSE:
-		{
-			MY_TRACE(_T("singleWindowProc(WM_CLOSE)\n"));
-
-			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 		}
 	case WM_PAINT:
 		{

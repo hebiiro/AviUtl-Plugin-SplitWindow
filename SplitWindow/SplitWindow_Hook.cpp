@@ -228,7 +228,7 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, SetWindowPos, (HWND hwnd, HWND insertAfter, in
 	if (!window) // Window を取得できない場合はデフォルト処理を行う。
 		return true_SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
 
-	MY_TRACE(_T("MoveWindow(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
+	MY_TRACE(_T("SetWindowPos(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
 	MY_TRACE_HWND(hwnd);
 	MY_TRACE_WSTR((LPCWSTR)window->m_name);
 
