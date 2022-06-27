@@ -216,6 +216,14 @@ BOOL importLayout(HWND hwnd)
 	// 再描画する。
 	::InvalidateRect(hwnd, 0, FALSE);
 
+	// シングルウィンドウが非表示なら表示する。
+	if (!::IsWindowVisible(hwnd))
+		::ShowWindow(hwnd, SW_SHOW);
+
+	// シングルウィンドウをフォアグラウンドにする。
+	::SetForegroundWindow(hwnd);
+	::SetActiveWindow(hwnd);
+
 	return TRUE;
 }
 
@@ -256,41 +264,51 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 {
 	switch (message)
 	{
-	case WM_SETFOCUS:
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+	case WM_CHAR:
+	case WM_DEADCHAR:
+	case WM_SYSKEYDOWN:
+	case WM_SYSKEYUP:
+	case WM_SYSCHAR:
+	case WM_SYSDEADCHAR:
 		{
-			MY_TRACE(_T("singleWindowProc(WM_SETFOCUS)\n"));
+			MY_TRACE(_T("singleWindowProc(WM_***KEY***, 0x%08X, 0x%08X, 0x%08X)\n"), message, wParam, lParam);
 
-			::SetFocus(g_aviutlWindow->m_hwnd);
-
-			break;
+			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 		}
 	case WM_ACTIVATE: // 「patch.aul」用。
 		{
-			MY_TRACE(_T("singleWindowProc(WM_ACTIVATE)\n"));
+			MY_TRACE(_T("singleWindowProc(WM_ACTIVATE, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
-			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+			if (LOWORD(wParam) == WA_INACTIVE)
+				::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+
+			break;
 		}
 	case WM_MENUSELECT: // 「patch.aul」用。
 		{
-			MY_TRACE(_T("singleWindowProc(WM_MENUSELECT)\n"));
+			MY_TRACE(_T("singleWindowProc(WM_MENUSELECT, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
-			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+			::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
+
+			break;
 		}
 	case WM_CLOSE:
 		{
-			MY_TRACE(_T("singleWindowProc(WM_CLOSE)\n"));
+			MY_TRACE(_T("singleWindowProc(WM_CLOSE, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 		}
 	case WM_COMMAND:
 		{
-			MY_TRACE(_T("singleWindowProc(WM_COMMAND)\n"));
+			MY_TRACE(_T("singleWindowProc(WM_COMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 		}
 	case WM_SYSCOMMAND:
 		{
-			MY_TRACE(_T("singleWindowProc(WM_SYSCOMMAND)\n"));
+			MY_TRACE(_T("singleWindowProc(WM_SYSCOMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			switch (wParam)
 			{

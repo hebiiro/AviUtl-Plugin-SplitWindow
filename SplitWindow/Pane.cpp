@@ -10,6 +10,7 @@ void Pane::resetPane()
 	{
 		m_window->m_pane = 0;
 		m_window->floatWindow();
+		m_window = 0;
 	}
 
 	for (auto& child : m_children)
