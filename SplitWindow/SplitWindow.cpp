@@ -74,6 +74,67 @@ void calcLayout()
 	g_root->recalcLayout(&rc);
 }
 
+void copyMenu(HMENU srcMenu, HMENU dstMenu)
+{
+	int c = ::GetMenuItemCount(srcMenu);
+
+	for (int i = 0; i < c; i++)
+	{
+		TCHAR text[MAX_PATH] = {};
+		MENUITEMINFO mii = { sizeof(mii) };
+		mii.fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_DATA | MIIM_FTYPE | MIIM_ID | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU;
+		mii.dwTypeData = text;
+		mii.cch = MAX_PATH;
+		::GetMenuItemInfo(srcMenu, i, TRUE, &mii);
+
+		if (mii.hSubMenu)
+		{
+			HMENU subMenu = ::CreatePopupMenu();
+			copyMenu(mii.hSubMenu, subMenu);
+			mii.hSubMenu = subMenu;
+		}
+
+		::InsertMenuItem(dstMenu, i, TRUE, &mii);
+	}
+}
+
+// ターゲットのメニューを表示する。
+BOOL showTargetMenu(POINT point)
+{
+	// ペインを取得する。
+	PanePtr pane = g_root->hitTestPane(point);
+	if (!pane) return FALSE;
+	if (!pane->m_window) return FALSE;
+
+	// 座標をチェックする。
+	RECT rcMenu = pane->getMenuRect();
+	if (!::PtInRect(&rcMenu, point)) return FALSE;
+
+	// メニューを表示する座標を算出する。
+	point.x = rcMenu.left;
+	point.y = rcMenu.bottom;
+	::ClientToScreen(g_singleWindow, &point);
+
+	// ターゲットを取得する。
+	HWND hwnd = pane->m_window->m_hwnd;
+
+	// ターゲットのメニューを取得する。
+	HMENU srcMenu = ::GetMenu(hwnd);
+	if (!srcMenu) return FALSE;
+
+	// ポップアップメニューを作成する。
+	HMENU dstMenu = ::CreatePopupMenu();
+	copyMenu(srcMenu, dstMenu);
+
+	// ポップアップメニューを表示する。
+	::TrackPopupMenuEx(dstMenu, TPM_VERPOSANIMATION, point.x, point.y, hwnd, 0);
+
+	// ポップアップメニューを削除する。
+	::DestroyMenu(dstMenu);
+
+	return TRUE;
+}
+
 // ペインの設定をするメニューを表示する。
 void showPaneMenu(POINT point)
 {
@@ -483,6 +544,9 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 			// マウス座標を取得する。
 			POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+			if (showTargetMenu(point))
+				break;
 
 			// マウス座標にあるボーダーを取得する。
 			g_hotBorderPane = g_root->hitTestBorder(point);

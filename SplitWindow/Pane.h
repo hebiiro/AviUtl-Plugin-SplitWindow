@@ -59,6 +59,7 @@ public:
 	int relativeX(int x);
 	int relativeY(int x);
 	RECT getCaptionRect();
+	RECT getMenuRect();
 	void normalize();
 	void recalcLayout();
 	void recalcLayout(LPCRECT rc);

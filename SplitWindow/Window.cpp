@@ -127,6 +127,9 @@ LRESULT Window::onTargetWndProc(Container* container, HWND hwnd, UINT message, W
 			// コンテナのウィンドウテキストを更新する。
 			::SetWindowText(::GetParent(hwnd), (LPCTSTR)lParam);
 
+			// ペインのタイトル部分を再描画する。
+			::InvalidateRect(g_singleWindow, 0, FALSE);
+
 			break;
 		}
 	case WM_SETFOCUS:

@@ -175,6 +175,17 @@ RECT Pane::getCaptionRect()
 	};
 }
 
+RECT Pane::getMenuRect()
+{
+	return RECT
+	{
+		m_position.left,
+		m_position.top,
+		m_position.left + g_captionHeight,
+		m_position.top + g_captionHeight,
+	};
+}
+
 void Pane::normalize()
 {
 //	MY_TRACE(_T("Pane::normalize()\n"));
@@ -443,6 +454,9 @@ void Pane::drawCaption(HDC dc)
 		if (rc.bottom > m_position.bottom)
 			return; // キャプションがはみ出てしまう場合は何もしない。
 
+		RECT rcMenu = getMenuRect();
+		BOOL hasMenu = !!::GetMenu(m_window->m_hwnd);
+
 		// ウィンドウテキストを取得する。
 		WCHAR text[MAX_PATH] = {};
 		::GetWindowTextW(m_window->m_hwnd, text, MAX_PATH);
@@ -459,6 +473,11 @@ void Pane::drawCaption(HDC dc)
 			::DrawThemeBackground(g_theme, dc, WP_CAPTION, stateId, &rc, 0);
 			::DrawThemeText(g_theme, dc, WP_CAPTION, stateId,
 				text, ::lstrlenW(text), DT_CENTER | DT_VCENTER | DT_SINGLELINE, 0, &rc);
+			if (hasMenu)
+			{
+				::DrawThemeText(g_theme, dc, WP_CAPTION, stateId,
+					L"M", -1, DT_CENTER | DT_VCENTER | DT_SINGLELINE, 0, &rc);
+			}
 		}
 		// テーマを使用しないなら
 		else
@@ -481,6 +500,7 @@ void Pane::drawCaption(HDC dc)
 			int bkMode = ::SetBkMode(dc, TRANSPARENT);
 			COLORREF textColor = ::SetTextColor(dc, captionTextColor);
 			::DrawTextW(dc, text, ::lstrlenW(text), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			if (hasMenu) ::DrawTextW(dc, L"M", -1, &rcMenu, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 			::SetTextColor(dc, textColor);
 			::SetBkMode(dc, bkMode);
 		}

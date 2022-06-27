@@ -274,9 +274,9 @@ HWND getMenuOwner(HWND hwnd)
 	}
 	else
 	{
-		HWND hwndContainer = ::GetParent(hwnd);
-		if (Container::getContainer(hwndContainer))
-			hwnd = hwndContainer;
+		Window* window = Window::getWindow(hwnd);
+		if (window)
+			hwnd = window->m_floatContainer->m_hwnd;
 	}
 
 	return hwnd;
