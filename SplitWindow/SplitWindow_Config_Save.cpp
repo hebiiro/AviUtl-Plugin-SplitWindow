@@ -3,6 +3,18 @@
 
 //---------------------------------------------------------------------
 
+std::wstring getName(LPCWSTR x)
+{
+	std::wstring name(x);
+	std::wstring t = L"* ";  // 検索文字列
+	auto pos = name.find(t);  // 検索文字列が見つかった位置
+	auto len = t.length(); // 検索文字列の長さ
+	if (pos != std::string::npos)
+		name.replace(pos, len, L"");
+
+	return name;
+}
+
 HRESULT saveConfig()
 {
 	MY_TRACE(_T("saveConfig()\n"));
@@ -30,7 +42,6 @@ HRESULT saveConfig(LPCWSTR fileName, BOOL _export)
 		{
 			setPrivateProfileInt(element, L"borderWidth", g_borderWidth);
 			setPrivateProfileInt(element, L"captionHeight", g_captionHeight);
-			setPrivateProfileInt(element, L"borderSnapRange", g_borderSnapRange);
 			setPrivateProfileColor(element, L"fillColor", g_fillColor);
 			setPrivateProfileColor(element, L"borderColor", g_borderColor);
 			setPrivateProfileColor(element, L"hotBorderColor", g_hotBorderColor);
@@ -67,24 +78,28 @@ HRESULT savePane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane)
 	// <pane> を作成する。
 	MSXML2::IXMLDOMElementPtr paneElement = appendElement(element, L"pane");
 
+	int current = pane->m_tab.getCurrentIndex();
+
 	setPrivateProfileLabel(paneElement, L"splitMode", pane->m_splitMode, g_splitModeLabel);
 	setPrivateProfileLabel(paneElement, L"origin", pane->m_origin, g_originLabel);
 	setPrivateProfileInt(paneElement, L"border", pane->m_border);
+	setPrivateProfileInt(paneElement, L"current", current);
 
-	if (pane->m_window)
+	int c = pane->m_tab.getTabCount();
+	for (int i = 0; i < c; i++)
 	{
+		Window* window = pane->m_tab.getWindow(i);
+
+		// <dockWindow> を作成する。
+		MSXML2::IXMLDOMElementPtr dockWindowElement = appendElement(paneElement, L"dockWindow");
+
 		for (auto& x : g_windowMap)
 		{
-			if (pane->m_window == x.second)
+			if (window == x.second.get())
 			{
-				std::wstring name(x.first);
-				std::wstring t = L"* ";  // 検索文字列
-				auto pos = name.find(t);  // 検索文字列が見つかった位置
-				auto len = t.length(); // 検索文字列の長さ
-				if (pos != std::string::npos)
-					name.replace(pos, len, L"");
+				std::wstring name = getName(x.first);
 
-				setPrivateProfileString(paneElement, L"window", name.c_str());
+				setPrivateProfileString(dockWindowElement, L"name", name.c_str());
 
 				break;
 			}
@@ -110,12 +125,7 @@ HRESULT saveFloatWindow(const MSXML2::IXMLDOMElementPtr& element)
 		// <floatWindow> を作成する。
 		MSXML2::IXMLDOMElementPtr floatWindowElement = appendElement(element, L"floatWindow");
 
-		std::wstring name(x.first);
-		std::wstring t = L"* ";  // 検索文字列
-		auto pos = name.find(t);  // 検索文字列が見つかった位置
-		auto len = t.length(); // 検索文字列の長さ
-		if (pos != std::string::npos)
-			name.replace(pos, len, L"");
+		std::wstring name = getName(x.first);
 
 		setPrivateProfileString(floatWindowElement, L"name", name.c_str());
 		setPrivateProfileWindow(floatWindowElement, L"placement", x.second->m_floatContainer->m_hwnd);

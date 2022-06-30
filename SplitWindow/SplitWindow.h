@@ -28,6 +28,8 @@ struct CommandID
 	static const UINT SPLIT_MODE_HORZ = 1002;
 	static const UINT ORIGIN_TOP_LEFT = 1010;
 	static const UINT ORIGIN_BOTTOM_RIGHT = 1011;
+	static const UINT MOVE_TO_LEFT = 1012;
+	static const UINT MOVE_TO_RIGHT = 1013;
 	static const UINT WINDOW = 2000;
 };
 
@@ -48,7 +50,6 @@ extern PanePtr g_hotBorderPane;
 
 extern int g_borderWidth;
 extern int g_captionHeight;
-extern int g_borderSnapRange;
 extern COLORREF g_fillColor;
 extern COLORREF g_borderColor;
 extern COLORREF g_hotBorderColor;
@@ -62,7 +63,7 @@ extern BOOL g_useTheme;
 
 HWND createSingleWindow();
 void calcLayout();
-void showPaneMenu(POINT point);
+void showPaneMenu();
 void fillBackground(HDC dc, LPCRECT rc);
 LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

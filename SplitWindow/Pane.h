@@ -38,6 +38,32 @@ class AviUtlWindow; typedef std::shared_ptr<AviUtlWindow> AviUtlWindowPtr;
 class ExEditWindow; typedef std::shared_ptr<ExEditWindow> ExEditWindowPtr;
 class SettingDialog; typedef std::shared_ptr<SettingDialog> SettingDialogPtr;
 
+class TabControl
+{
+public:
+
+	HWND m_hwnd;
+
+	TabControl(Pane* pane);
+	~TabControl();
+
+	static Pane* getPane(HWND hwnd);
+	static void setPane(HWND hwnd, Pane* pane);
+
+	int getTabCount();
+	Window* getWindow(int index);
+	int getCurrentIndex();
+	int setCurrentIndex(int index);
+	int hitTest(POINT point);
+	int addTab(Window* window, LPCTSTR text, int index);
+	void deleteTab(int index);
+	void deleteAllTabs();
+	int findTab(Window* window);
+	int moveTab(int from, int to);
+	void changeCurrent();
+	void changeText(Window* window, LPCTSTR text);
+};
+
 class Pane : public std::enable_shared_from_this<Pane>
 {
 public:
@@ -48,12 +74,19 @@ public:
 	int m_border = 0;
 	int m_dragOffset = 0; // ドラッグ処理に使う。
 
-	WindowPtr m_window;
+	TabControl m_tab;
 	PanePtr m_children[2];
+
+	Pane();
+	~Pane();
+
+	Window* getActiveWindow();
+	int addWindow(Window* window, int index = -1);
+	void removeWindow(Window* window);
+	void removeAllWindows();
 
 	void resetPane();
 	void setSplitMode(int splitMode);
-	void setWindow(WindowPtr window);
 	int absoluteX(int x);
 	int absoluteY(int x);
 	int relativeX(int x);

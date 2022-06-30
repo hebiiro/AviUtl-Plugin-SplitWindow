@@ -27,7 +27,6 @@ PanePtr g_hotBorderPane;
 
 int g_borderWidth = 8;
 int g_captionHeight = 24;
-int g_borderSnapRange = 8;
 COLORREF g_fillColor = RGB(0x99, 0x99, 0x99);
 COLORREF g_borderColor = RGB(0xcc, 0xcc, 0xcc);
 COLORREF g_hotBorderColor = RGB(0x00, 0x00, 0x00);
@@ -52,10 +51,10 @@ HWND createSingleWindow()
 	wc.lpszClassName = _T("AviUtl"); // クラス名を AviUtl に偽装する。「AoiSupport」用。
 	::RegisterClass(&wc);
 
-	HWND hwnd = true_CreateWindowExA(
+	HWND hwnd = ::CreateWindowEx(
 		0,
-		"AviUtl",
-		"SplitWindow",
+		_T("SplitWindow"), // フックして AviUtl に置き換える。
+		_T("SplitWindow"),
 		WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME |
 		WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -104,7 +103,9 @@ BOOL showTargetMenu(POINT point)
 	// ペインを取得する。
 	PanePtr pane = g_root->hitTestPane(point);
 	if (!pane) return FALSE;
-	if (!pane->m_window) return FALSE;
+
+	Window* window = pane->getActiveWindow();
+	if (!window) return FALSE;
 
 	// 座標をチェックする。
 	RECT rcMenu = pane->getMenuRect();
@@ -116,7 +117,7 @@ BOOL showTargetMenu(POINT point)
 	::ClientToScreen(g_singleWindow, &point);
 
 	// ターゲットを取得する。
-	HWND hwnd = pane->m_window->m_hwnd;
+	HWND hwnd = window->m_hwnd;
 
 	// ターゲットのメニューを取得する。
 	HMENU srcMenu = ::GetMenu(hwnd);
@@ -136,35 +137,60 @@ BOOL showTargetMenu(POINT point)
 }
 
 // ペインの設定をするメニューを表示する。
-void showPaneMenu(POINT point)
+void showPaneMenu()
 {
+	POINT cursorPos; ::GetCursorPos(&cursorPos);
+	POINT point = cursorPos;
+	::ScreenToClient(g_singleWindow, &point);
+
 	PanePtr pane = g_root->hitTestPane(point);
 	if (!pane) return;
 
-	BOOL allWindow = ::GetKeyState(VK_SHIFT) < 0;
+	int c = pane->m_tab.getTabCount();
+	int ht = (c <= 1) ? -1 : pane->m_tab.hitTest(point);
 
 	HMENU menu = ::CreatePopupMenu();
 
 	::AppendMenu(menu, MF_STRING, CommandID::SPLIT_MODE_NONE, _T("分割なし"));
-	::AppendMenu(menu, MF_STRING, CommandID::SPLIT_MODE_VERT, _T("垂直分割"));
-	::AppendMenu(menu, MF_STRING, CommandID::SPLIT_MODE_HORZ, _T("水平分割"));
+	::AppendMenu(menu, MF_STRING, CommandID::SPLIT_MODE_VERT, _T("垂直線で分割"));
+	::AppendMenu(menu, MF_STRING, CommandID::SPLIT_MODE_HORZ, _T("水平線で分割"));
 	::AppendMenu(menu, MF_SEPARATOR, -1, 0);
 	::AppendMenu(menu, MF_STRING, CommandID::ORIGIN_TOP_LEFT, _T("左上を原点にする"));
 	::AppendMenu(menu, MF_STRING, CommandID::ORIGIN_BOTTOM_RIGHT, _T("右下を原点にする"));
 	::AppendMenu(menu, MF_SEPARATOR, -1, 0);
+	::AppendMenu(menu, MF_STRING, CommandID::MOVE_TO_LEFT, _T("左に移動する"));
+	if (ht == -1 || ht <= 0)
+		::EnableMenuItem(menu, CommandID::MOVE_TO_LEFT, MF_GRAYED | MF_DISABLED);
+	::AppendMenu(menu, MF_STRING, CommandID::MOVE_TO_RIGHT, _T("右に移動する"));
+	if (ht == -1 || ht >= c - 1)
+		::EnableMenuItem(menu, CommandID::MOVE_TO_RIGHT, MF_GRAYED | MF_DISABLED);
 
 	{
-		::AppendMenu(menu, MF_STRING, CommandID::WINDOW, _T("ウィンドウなし"));
-		if (!pane->m_window)
+		::AppendMenu(menu, MF_STRING | MF_MENUBARBREAK, CommandID::WINDOW, _T("ドッキングを解除"));
+		if (!pane->m_tab.getTabCount())
 			::CheckMenuItem(menu, CommandID::WINDOW, MF_CHECKED);
 
 		int index = 1;
 		for (auto& x : g_windowMap)
 		{
-			if (!allWindow)
-				if (!::IsWindowVisible(x.second->m_hwnd)) continue;
+			if (!::IsWindowVisible(x.second->m_hwnd)) continue;
 			::AppendMenu(menu, MF_STRING, CommandID::WINDOW + index, x.first);
-			if (pane->m_window == x.second)
+			if (pane->m_tab.findTab(x.second.get()) != -1)
+				::CheckMenuItem(menu, CommandID::WINDOW + index, MF_CHECKED);
+			index++;
+		}
+		BOOL first = TRUE;
+		for (auto& x : g_windowMap)
+		{
+			if (::IsWindowVisible(x.second->m_hwnd)) continue;
+			UINT flags = MF_STRING;
+			if (first)
+			{
+				first = FALSE;
+				flags |= MF_MENUBARBREAK;
+			}
+			::AppendMenu(menu, flags, CommandID::WINDOW + index, x.first);
+			if (pane->m_tab.findTab(x.second.get()) != -1)
 				::CheckMenuItem(menu, CommandID::WINDOW + index, MF_CHECKED);
 			index++;
 		}
@@ -183,8 +209,7 @@ void showPaneMenu(POINT point)
 	case Origin::bottomRight: ::CheckMenuItem(menu, CommandID::ORIGIN_BOTTOM_RIGHT, MF_CHECKED); break;
 	}
 
-	POINT pt; ::GetCursorPos(&pt);
-	int id = ::TrackPopupMenu(menu, TPM_NONOTIFY | TPM_RETURNCMD, pt.x, pt.y, 0, g_singleWindow, 0);
+	int id = ::TrackPopupMenu(menu, TPM_NONOTIFY | TPM_RETURNCMD, cursorPos.x, cursorPos.y, 0, g_singleWindow, 0);
 
 	if (id)
 	{
@@ -196,11 +221,18 @@ void showPaneMenu(POINT point)
 
 		case CommandID::ORIGIN_TOP_LEFT: pane->m_origin = Origin::topLeft; break;
 		case CommandID::ORIGIN_BOTTOM_RIGHT: pane->m_origin = Origin::bottomRight; break;
+
+		case CommandID::MOVE_TO_LEFT: pane->m_tab.moveTab(ht, ht - 1); break;
+		case CommandID::MOVE_TO_RIGHT: pane->m_tab.moveTab(ht, ht + 1); break;
 		}
 
 		if (id == CommandID::WINDOW)
 		{
-			pane->setWindow(0);
+			if (ht != -1)
+			{
+				Window* window = pane->m_tab.getWindow(ht);
+				pane->removeWindow(window);
+			}
 		}
 		else if (id > CommandID::WINDOW)
 		{
@@ -210,7 +242,20 @@ void showPaneMenu(POINT point)
 
 			auto it = g_windowMap.find(text);
 			if (it != g_windowMap.end())
-				pane->setWindow(it->second);
+			{
+				Window* window = it->second.get();
+				Pane* oldPane = window->m_pane;
+
+				int index = pane->addWindow(window, ht);
+				if (index != -1)
+				{
+					if (oldPane)
+						oldPane->recalcLayout();
+
+					pane->m_tab.setCurrentIndex(index);
+					pane->m_tab.changeCurrent();
+				}
+			}
 		}
 
 		pane->recalcLayout();
@@ -405,6 +450,30 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 			break;
 		}
+	case WM_NOTIFY:
+		{
+			NMHDR* header = (NMHDR*)lParam;
+
+			switch (header->code)
+			{
+			case NM_RCLICK:
+				{
+					showPaneMenu();
+
+					break;
+				}
+			case TCN_SELCHANGE:
+				{
+					Pane* pane = TabControl::getPane(header->hwndFrom);
+					if (pane)
+						pane->m_tab.changeCurrent();
+
+					break;
+				}
+			}
+
+			break;
+		}
 	case WM_CREATE:
 		{
 			MY_TRACE(_T("singleWindowProc(WM_CREATE)\n"));
@@ -567,12 +636,15 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			}
 
 			{
-				// マウス座標にあるペインを取得する。
+				// マウス座標にあるペインを取得できたら
 				PanePtr pane = g_root->hitTestPane(point);
-
-				// クリックされたペインがウィンドウを持っている場合はそのウィンドウにフォーカスを当てる。
-				if (pane && pane->m_window)
-					::SetFocus(pane->m_window->m_hwnd);
+				if (pane)
+				{
+					// クリックされたペインがウィンドウを持っているなら
+					Window* window = pane->getActiveWindow();
+					if (window)
+						::SetFocus(window->m_hwnd); // そのウィンドウにフォーカスを当てる。
+				}
 			}
 
 			break;
@@ -609,29 +681,8 @@ LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		{
 			MY_TRACE(_T("singleWindowProc(WM_RBUTTONDOWN)\n"));
 
-			// マウス座標を取得する。
-			POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-
-			{
-				// マウス座標にあるペインを取得する。
-				PanePtr pane = g_root->hitTestPane(point);
-
-				// クリックされたペインがウィンドウを持っている場合はそのウィンドウにフォーカスを当てる。
-				if (pane && pane->m_window)
-					::SetFocus(pane->m_window->m_hwnd);
-			}
-
-			break;
-		}
-	case WM_RBUTTONUP:
-		{
-			MY_TRACE(_T("singleWindowProc(WM_RBUTTONUP)\n"));
-
-			// マウス座標を取得する。
-			POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-
 			// レイアウト編集メニューを表示する。
-			showPaneMenu(point);
+			showPaneMenu();
 
 			break;
 		}

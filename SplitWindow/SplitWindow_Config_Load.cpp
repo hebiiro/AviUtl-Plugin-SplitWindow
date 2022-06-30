@@ -3,6 +3,21 @@
 
 //---------------------------------------------------------------------
 
+HRESULT WINAPI getPrivateProfileName(const MSXML2::IXMLDOMElementPtr& element, LPCWSTR name, _bstr_t& outValue)
+{
+	HRESULT hr = getPrivateProfileString(element->getAttribute(name), outValue);
+	if (hr == S_OK)
+	{
+		if (::lstrcmpW(outValue, L"AviUtl") == 0 ||
+			::lstrcmpW(outValue, L"拡張編集") == 0 ||
+			::lstrcmpW(outValue, L"設定ダイアログ") == 0)
+		{
+			outValue = L"* " + outValue;
+		}
+	}
+	return hr;
+}
+
 HRESULT loadConfig()
 {
 	MY_TRACE(_T("loadConfig()\n"));
@@ -37,7 +52,6 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 		{
 			getPrivateProfileInt(element, L"borderWidth", g_borderWidth);
 			getPrivateProfileInt(element, L"captionHeight", g_captionHeight);
-			getPrivateProfileInt(element, L"borderSnapRange", g_borderSnapRange);
 			getPrivateProfileColor(element, L"fillColor", g_fillColor);
 			getPrivateProfileColor(element, L"borderColor", g_borderColor);
 			getPrivateProfileColor(element, L"hotBorderColor", g_hotBorderColor);
@@ -86,31 +100,38 @@ HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& paneElement, PanePtr pane)
 
 	// <pane> のアトリビュートを読み込む。
 
+	int current = -1;
+
 	getPrivateProfileLabel(paneElement, L"splitMode", pane->m_splitMode, g_splitModeLabel);
 	getPrivateProfileLabel(paneElement, L"origin", pane->m_origin, g_originLabel);
 	getPrivateProfileInt(paneElement, L"border", pane->m_border);
-
-	_bstr_t name = L"";
-	getPrivateProfileString(paneElement, L"window", name);
-
-	if (::lstrcmpW(name, L"AviUtl") == 0 ||
-		::lstrcmpW(name, L"拡張編集") == 0 ||
-		::lstrcmpW(name, L"設定ダイアログ") == 0)
-	{
-		name = L"* " + name;
-	}
+	getPrivateProfileInt(paneElement, L"current", current);
 
 	MY_TRACE_INT(pane->m_splitMode);
+	MY_TRACE_INT(pane->m_origin);
 	MY_TRACE_INT(pane->m_border);
-	MY_TRACE_WSTR((LPCWSTR)name);
+	MY_TRACE_INT(current);
 
-	auto it = g_windowMap.find(name);
-	if (it != g_windowMap.end())
 	{
-		pane->m_window = it->second;
-		pane->m_window->m_pane = pane.get();
-		pane->m_window->dockWindow(&pane->m_position);
+		// <dockWindow> を読み込む。
+		MSXML2::IXMLDOMNodeListPtr nodeList = paneElement->selectNodes(L"dockWindow");
+		int c = nodeList->length;
+		for (int i = 0; i < c; i++)
+		{
+			MSXML2::IXMLDOMElementPtr dockWindowElement = nodeList->item[i];
+
+			_bstr_t name = L"";
+			getPrivateProfileName(dockWindowElement, L"name", name);
+			MY_TRACE_WSTR((LPCWSTR)name);
+
+			auto it = g_windowMap.find(name);
+			if (it != g_windowMap.end())
+				pane->addWindow(it->second.get());
+		}
 	}
+
+	pane->m_tab.setCurrentIndex(current);
+	pane->m_tab.changeCurrent();
 
 	// <pane> を読み込む。
 	MSXML2::IXMLDOMNodeListPtr nodeList = paneElement->selectNodes(L"pane");
@@ -139,14 +160,7 @@ HRESULT loadFloatWindow(const MSXML2::IXMLDOMElementPtr& element)
 		MSXML2::IXMLDOMElementPtr floatWindowElement = nodeList->item[i];
 
 		_bstr_t name = L"";
-		getPrivateProfileString(floatWindowElement, L"name", name);
-
-		if (::lstrcmpW(name, L"AviUtl") == 0 ||
-			::lstrcmpW(name, L"拡張編集") == 0 ||
-			::lstrcmpW(name, L"設定ダイアログ") == 0)
-		{
-			name = L"* " + name;
-		}
+		getPrivateProfileName(floatWindowElement, L"name", name);
 
 		auto it = g_windowMap.find(name);
 		if (it != g_windowMap.end())

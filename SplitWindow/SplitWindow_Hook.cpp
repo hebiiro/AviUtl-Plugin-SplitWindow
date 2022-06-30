@@ -101,15 +101,23 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 	// デバッグ用出力。
 //	MY_TRACE(_T("CreateWindowExA(%hs, %hs)\n"), className, windowName);
 
-	if (::lstrcmpiA(windowName, "AviUtl") == 0)
+	if (::lstrcmpiA(className, "SplitWindow") == 0)
+	{
+		// シングルウィンドウのクラス名を置き換える。
+		className = "AviUtl";
+	}
+	else if (::lstrcmpiA(windowName, "AviUtl") == 0)
 	{
 		// AviUtl ウィンドウが作成される直前のタイミング。
 
-		// ルートペインを作成する。
-		g_root.reset(new Pane());
+		// AviUtl 関連のアドレス情報を初期化する。
+		g_auin.initAviUtlAddress();
 
 		// 土台となるシングルウィンドウを作成する。
 		g_singleWindow = createSingleWindow();
+
+		// ルートペインを作成する。
+		g_root.reset(new Pane());
 
 		// コンテナのウィンドウクラスを登録する。
 		Container::registerWndClass();
