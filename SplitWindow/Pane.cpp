@@ -193,8 +193,9 @@ int Pane::addWindow(Window* window, int index)
 	int result = m_tab.addTab(window, text, index);
 
 	// ウィンドウをドッキング状態にする。
+	RECT rcDock = getDockRect();
 	window->m_pane = this;
-	window->dockWindow(&m_position);
+	window->dockWindow(&rcDock);
 
 	return result;
 }
@@ -353,6 +354,48 @@ int Pane::relativeY(int y)
 	return 0;
 }
 
+// ドッキング領域を返す。
+RECT Pane::getDockRect()
+{
+	// タブの数が 1 個以下なら
+	if (m_tab.getTabCount() <= 1)
+	{
+		return RECT
+		{
+			m_position.left,
+			m_position.top + g_captionHeight,
+			m_position.right,
+			m_position.bottom,
+		};
+	}
+	// タブの数が 2 個以上なら
+	else
+	{
+		// タブを下に配置する場合は
+		if (g_bottomTab)
+		{
+			return RECT
+			{
+				m_position.left,
+				m_position.top + g_captionHeight,
+				m_position.right,
+				m_position.bottom - g_captionHeight,
+			};
+		}
+		// タブを上に配置する場合は
+		else
+		{
+			return RECT
+			{
+				m_position.left,
+				m_position.top + g_captionHeight,
+				m_position.right,
+				m_position.bottom,
+			};
+		}
+	}
+}
+
 RECT Pane::getCaptionRect()
 {
 	return RECT
@@ -403,19 +446,39 @@ void Pane::recalcLayout(LPCRECT rc)
 
 	int c = m_tab.getTabCount();
 
-	// ウィンドウを 2 個以上持っているなら
+	// タブが 2 個以上あるなら
 	if (c >= 2)
 	{
-		int x = m_position.left + g_captionHeight;
-		int y = m_position.top;
-		int w = getWidth(m_position) - g_captionHeight;
-		int h = g_captionHeight;
+		// タブを下に表示するなら
+		if (g_bottomTab)
+		{
+			int x = m_position.left;
+			int y = m_position.bottom - g_captionHeight;
+			int w = getWidth(m_position);
+			int h = g_captionHeight;
 
-		// タブコントロールを表示する。
-		true_SetWindowPos(m_tab.m_hwnd, 0,
-			x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+			modifyStyle(m_tab.m_hwnd, 0, TCS_BOTTOM);
+
+			// タブコントロールを表示する。
+			true_SetWindowPos(m_tab.m_hwnd, 0,
+				x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+		}
+		// タブを上に表示するなら
+		else
+		{
+			int x = m_position.left + g_captionHeight;
+			int y = m_position.top;
+			int w = getWidth(m_position) - g_captionHeight;
+			int h = g_captionHeight;
+
+			modifyStyle(m_tab.m_hwnd, TCS_BOTTOM, 0);
+
+			// タブコントロールを表示する。
+			true_SetWindowPos(m_tab.m_hwnd, 0,
+				x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+		}
 	}
-	// ウィンドウの数が 1 個以下なら
+	// タブが 1 個以下なら
 	else
 	{
 		// タブコントロールを非表示にする。
@@ -424,11 +487,13 @@ void Pane::recalcLayout(LPCRECT rc)
 
 	if (c) // ウィンドウを持っている場合は
 	{
+		RECT rcDock = getDockRect();
+
 		for (int i = 0; i < c; i++)
 		{
 			Window* window = m_tab.getWindow(i);
 
-			window->resizeDockContainer(&m_position); // ウィンドウをリサイズする。
+			window->resizeDockContainer(&rcDock); // ウィンドウをリサイズする。
 		}
 
 		return; // ウィンドウを持つペインは子ペインを持たないのでここで終了する。

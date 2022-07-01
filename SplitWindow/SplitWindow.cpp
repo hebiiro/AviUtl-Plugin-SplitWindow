@@ -35,6 +35,7 @@ COLORREF g_activeCaptionTextColor = RGB(0xff, 0xff, 0xff);
 COLORREF g_inactiveCaptionColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
 COLORREF g_inactiveCaptionTextColor = RGB(0x00, 0x00, 0x00);
 BOOL g_useTheme = FALSE;
+BOOL g_bottomTab = TRUE;
 
 //---------------------------------------------------------------------
 
@@ -147,7 +148,7 @@ void showPaneMenu()
 	if (!pane) return;
 
 	int c = pane->m_tab.getTabCount();
-	int ht = (c <= 1) ? -1 : pane->m_tab.hitTest(point);
+	int ht = (c <= 1) ? 0 : pane->m_tab.hitTest(point);
 
 	HMENU menu = ::CreatePopupMenu();
 

@@ -213,10 +213,7 @@ void Window::floatWindow()
 
 void Window::resizeDockContainer(LPCRECT rc)
 {
-	// 矩形からペインのタイトル部分を除外する。
-	RECT rc2 = *rc;
-	rc2.top += g_captionHeight;
-	m_dockContainer->onResizeDockContainer(&rc2);
+	m_dockContainer->onResizeDockContainer(rc);
 }
 
 void Window::resizeFloatContainer()

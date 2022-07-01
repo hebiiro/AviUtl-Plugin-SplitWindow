@@ -58,6 +58,7 @@ extern COLORREF g_activeCaptionTextColor;
 extern COLORREF g_inactiveCaptionColor;
 extern COLORREF g_inactiveCaptionTextColor;
 extern BOOL g_useTheme;
+extern BOOL g_bottomTab;
 
 //---------------------------------------------------------------------
 

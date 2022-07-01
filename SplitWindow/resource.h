@@ -28,6 +28,7 @@
 #define IDC_INACTIVE_CAPTION_COLOR      1023
 #define IDC_INACTIVE_CAPTION_TEXT_COLOR 1024
 #define IDC_USE_THEME                   1025
+#define IDC_BOTTOM_TAB                  1026
 
 // Next default values for new objects
 // 

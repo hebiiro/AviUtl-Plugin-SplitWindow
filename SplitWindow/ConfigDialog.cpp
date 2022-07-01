@@ -16,6 +16,8 @@ int showConfigDialog(HWND hwnd)
 	::SetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, g_inactiveCaptionTextColor, FALSE);
 	HWND hwndUseTheme = ::GetDlgItem(dialog, IDC_USE_THEME);
 	Button_SetCheck(hwndUseTheme, g_useTheme);
+	HWND hwndBottomTab = ::GetDlgItem(dialog, IDC_BOTTOM_TAB);
+	Button_SetCheck(hwndBottomTab, g_bottomTab);
 
 	::EnableWindow(hwnd, FALSE);
 	int retValue = dialog.doModal();
@@ -33,6 +35,7 @@ int showConfigDialog(HWND hwnd)
 	g_inactiveCaptionColor = ::GetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_COLOR, 0, FALSE);
 	g_inactiveCaptionTextColor = ::GetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, 0, FALSE);
 	g_useTheme = Button_GetCheck(hwndUseTheme);
+	g_bottomTab = Button_GetCheck(hwndBottomTab);
 
 	// レイアウトを再計算する。
 	calcLayout();

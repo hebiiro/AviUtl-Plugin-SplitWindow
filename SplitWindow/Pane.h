@@ -91,6 +91,7 @@ public:
 	int absoluteY(int x);
 	int relativeX(int x);
 	int relativeY(int x);
+	RECT getDockRect();
 	RECT getCaptionRect();
 	RECT getMenuRect();
 	void normalize();
