@@ -52,6 +52,8 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 		{
 			getPrivateProfileInt(element, L"borderWidth", g_borderWidth);
 			getPrivateProfileInt(element, L"captionHeight", g_captionHeight);
+			getPrivateProfileInt(element, L"menuBreak", g_menuBreak);
+			getPrivateProfileLabel(element, L"tabMode", g_tabMode, g_tabModeLabel);
 			getPrivateProfileColor(element, L"fillColor", g_fillColor);
 			getPrivateProfileColor(element, L"borderColor", g_borderColor);
 			getPrivateProfileColor(element, L"hotBorderColor", g_hotBorderColor);

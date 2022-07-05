@@ -357,43 +357,53 @@ int Pane::relativeY(int y)
 // ドッキング領域を返す。
 RECT Pane::getDockRect()
 {
-	// タブの数が 1 個以下なら
-	if (m_tab.getTabCount() <= 1)
-	{
-		return RECT
-		{
-			m_position.left,
-			m_position.top + g_captionHeight,
-			m_position.right,
-			m_position.bottom,
-		};
-	}
 	// タブの数が 2 個以上なら
-	else
+	if (m_tab.getTabCount() >= 2)
 	{
-		// タブを下に配置する場合は
-		if (g_bottomTab)
+		// タブを考慮に入れてドッキング領域を返す。
+		switch (g_tabMode)
 		{
-			return RECT
+		case TabMode::title: // タブをタイトルに配置する場合は
 			{
-				m_position.left,
-				m_position.top + g_captionHeight,
-				m_position.right,
-				m_position.bottom - g_captionHeight,
-			};
-		}
-		// タブを上に配置する場合は
-		else
-		{
-			return RECT
+				return RECT
+				{
+					m_position.left,
+					m_position.top + g_captionHeight,
+					m_position.right,
+					m_position.bottom,
+				};
+			}
+		case TabMode::top: // タブを上に配置する場合は
 			{
-				m_position.left,
-				m_position.top + g_captionHeight,
-				m_position.right,
-				m_position.bottom,
-			};
+				return RECT
+				{
+					m_position.left,
+					m_position.top + g_captionHeight * 2,
+					m_position.right,
+					m_position.bottom,
+				};
+			}
+		case TabMode::bottom: // タブを下に配置する場合は
+			{
+				return RECT
+				{
+					m_position.left,
+					m_position.top + g_captionHeight,
+					m_position.right,
+					m_position.bottom - g_captionHeight,
+				};
+			}
 		}
 	}
+
+	// タブを考慮に入れずにドッキング領域を返す。
+	return RECT
+	{
+		m_position.left,
+		m_position.top + g_captionHeight,
+		m_position.right,
+		m_position.bottom,
+	};
 }
 
 RECT Pane::getCaptionRect()
@@ -449,33 +459,53 @@ void Pane::recalcLayout(LPCRECT rc)
 	// タブが 2 個以上あるなら
 	if (c >= 2)
 	{
-		// タブを下に表示するなら
-		if (g_bottomTab)
+		switch (g_tabMode)
 		{
-			int x = m_position.left;
-			int y = m_position.bottom - g_captionHeight;
-			int w = getWidth(m_position);
-			int h = g_captionHeight;
+		case TabMode::title: // タブをタイトルに表示するなら
+			{
+				int x = m_position.left + g_captionHeight;
+				int y = m_position.top;
+				int w = getWidth(m_position) - g_captionHeight;
+				int h = g_captionHeight;
 
-			modifyStyle(m_tab.m_hwnd, 0, TCS_BOTTOM);
+				modifyStyle(m_tab.m_hwnd, TCS_BOTTOM, 0);
 
-			// タブコントロールを表示する。
-			true_SetWindowPos(m_tab.m_hwnd, 0,
-				x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-		}
-		// タブを上に表示するなら
-		else
-		{
-			int x = m_position.left + g_captionHeight;
-			int y = m_position.top;
-			int w = getWidth(m_position) - g_captionHeight;
-			int h = g_captionHeight;
+				// タブコントロールを表示する。
+				true_SetWindowPos(m_tab.m_hwnd, 0,
+					x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 
-			modifyStyle(m_tab.m_hwnd, TCS_BOTTOM, 0);
+				break;
+			}
+		case TabMode::top: // タブを上に表示するなら
+			{
+				int x = m_position.left;
+				int y = m_position.top + g_captionHeight;
+				int w = getWidth(m_position);
+				int h = g_captionHeight;
 
-			// タブコントロールを表示する。
-			true_SetWindowPos(m_tab.m_hwnd, 0,
-				x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+				modifyStyle(m_tab.m_hwnd, TCS_BOTTOM, 0);
+
+				// タブコントロールを表示する。
+				true_SetWindowPos(m_tab.m_hwnd, 0,
+					x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+
+				break;
+			}
+		case TabMode::bottom: // タブを下に表示するなら
+			{
+				int x = m_position.left;
+				int y = m_position.bottom - g_captionHeight;
+				int w = getWidth(m_position);
+				int h = g_captionHeight;
+
+				modifyStyle(m_tab.m_hwnd, 0, TCS_BOTTOM);
+
+				// タブコントロールを表示する。
+				true_SetWindowPos(m_tab.m_hwnd, 0,
+					x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+
+				break;
+			}
 		}
 	}
 	// タブが 1 個以下なら

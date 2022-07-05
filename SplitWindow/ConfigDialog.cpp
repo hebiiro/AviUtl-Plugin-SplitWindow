@@ -14,10 +14,16 @@ int showConfigDialog(HWND hwnd)
 	::SetDlgItemInt(dialog, IDC_ACTIVE_CAPTION_TEXT_COLOR, g_activeCaptionTextColor, FALSE);
 	::SetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_COLOR, g_inactiveCaptionColor, FALSE);
 	::SetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, g_inactiveCaptionTextColor, FALSE);
+	::SetDlgItemInt(dialog, IDC_BORDER_WIDTH, g_borderWidth, FALSE);
+	::SetDlgItemInt(dialog, IDC_CAPTION_HEIGHT, g_captionHeight, FALSE);
+	::SetDlgItemInt(dialog, IDC_MENU_BREAK, g_menuBreak, FALSE);
+	HWND hwndTabMode = ::GetDlgItem(dialog, IDC_TAB_MODE);
+	ComboBox_AddString(hwndTabMode, _T("タイトル"));
+	ComboBox_AddString(hwndTabMode, _T("上"));
+	ComboBox_AddString(hwndTabMode, _T("下"));
+	ComboBox_SetCurSel(hwndTabMode, g_tabMode);
 	HWND hwndUseTheme = ::GetDlgItem(dialog, IDC_USE_THEME);
 	Button_SetCheck(hwndUseTheme, g_useTheme);
-	HWND hwndBottomTab = ::GetDlgItem(dialog, IDC_BOTTOM_TAB);
-	Button_SetCheck(hwndBottomTab, g_bottomTab);
 
 	::EnableWindow(hwnd, FALSE);
 	int retValue = dialog.doModal();
@@ -34,8 +40,11 @@ int showConfigDialog(HWND hwnd)
 	g_activeCaptionTextColor = ::GetDlgItemInt(dialog, IDC_ACTIVE_CAPTION_TEXT_COLOR, 0, FALSE);
 	g_inactiveCaptionColor = ::GetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_COLOR, 0, FALSE);
 	g_inactiveCaptionTextColor = ::GetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, 0, FALSE);
+	g_borderWidth = ::GetDlgItemInt(dialog, IDC_BORDER_WIDTH, 0, FALSE);
+	g_captionHeight = ::GetDlgItemInt(dialog, IDC_CAPTION_HEIGHT, 0, FALSE);
+	g_menuBreak = ::GetDlgItemInt(dialog, IDC_MENU_BREAK, 0, FALSE);
+	g_tabMode = ComboBox_GetCurSel(hwndTabMode);
 	g_useTheme = Button_GetCheck(hwndUseTheme);
-	g_bottomTab = Button_GetCheck(hwndBottomTab);
 
 	// レイアウトを再計算する。
 	calcLayout();

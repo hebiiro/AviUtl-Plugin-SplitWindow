@@ -33,6 +33,20 @@ struct CommandID
 	static const UINT WINDOW = 2000;
 };
 
+struct TabMode
+{
+	static const int title = 0;
+	static const int top = 1;
+	static const int bottom = 2;
+};
+
+const Label g_tabModeLabel[] =
+{
+	{ L"title", TabMode::title },
+	{ L"top", TabMode::top },
+	{ L"bottom", TabMode::bottom },
+};
+
 //---------------------------------------------------------------------
 
 extern AviUtlInternal g_auin;
@@ -50,6 +64,8 @@ extern PanePtr g_hotBorderPane;
 
 extern int g_borderWidth;
 extern int g_captionHeight;
+extern int g_menuBreak;
+extern int g_tabMode;
 extern COLORREF g_fillColor;
 extern COLORREF g_borderColor;
 extern COLORREF g_hotBorderColor;
@@ -58,7 +74,6 @@ extern COLORREF g_activeCaptionTextColor;
 extern COLORREF g_inactiveCaptionColor;
 extern COLORREF g_inactiveCaptionTextColor;
 extern BOOL g_useTheme;
-extern BOOL g_bottomTab;
 
 //---------------------------------------------------------------------
 

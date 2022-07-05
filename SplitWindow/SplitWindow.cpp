@@ -27,6 +27,8 @@ PanePtr g_hotBorderPane;
 
 int g_borderWidth = 8;
 int g_captionHeight = 24;
+int g_menuBreak = 30;
+int g_tabMode = TabMode::bottom;
 COLORREF g_fillColor = RGB(0x99, 0x99, 0x99);
 COLORREF g_borderColor = RGB(0xcc, 0xcc, 0xcc);
 COLORREF g_hotBorderColor = RGB(0x00, 0x00, 0x00);
@@ -35,7 +37,6 @@ COLORREF g_activeCaptionTextColor = RGB(0xff, 0xff, 0xff);
 COLORREF g_inactiveCaptionColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
 COLORREF g_inactiveCaptionTextColor = RGB(0x00, 0x00, 0x00);
 BOOL g_useTheme = FALSE;
-BOOL g_bottomTab = TRUE;
 
 //---------------------------------------------------------------------
 
@@ -171,29 +172,66 @@ void showPaneMenu()
 		if (!pane->m_tab.getTabCount())
 			::CheckMenuItem(menu, CommandID::WINDOW, MF_CHECKED);
 
+		// 表示状態のウィンドウをメニューに追加する。
 		int index = 1;
 		for (auto& x : g_windowMap)
 		{
+			// 非表示状態のウィンドウはスキップする。
 			if (!::IsWindowVisible(x.second->m_hwnd)) continue;
+
+			// メニューアイテムを追加する。
 			::AppendMenu(menu, MF_STRING, CommandID::WINDOW + index, x.first);
+
+			// ウィンドウがタブの中に存在するなら
 			if (pane->m_tab.findTab(x.second.get()) != -1)
+			{
+				// メニューアイテムにチェックを入れる。
 				::CheckMenuItem(menu, CommandID::WINDOW + index, MF_CHECKED);
+			}
+
+			// カウンタをインクリメントする。
 			index++;
 		}
-		BOOL first = TRUE;
+
+		// 非表示状態のウィンドウをメニューに追加する。
+		int i = 0;
 		for (auto& x : g_windowMap)
 		{
+			// 表示状態のウィンドウはスキップする。
 			if (::IsWindowVisible(x.second->m_hwnd)) continue;
+
 			UINT flags = MF_STRING;
-			if (first)
+
+			// 最初のメニューアイテムなら
+			if (i == 0)
 			{
-				first = FALSE;
+				// 折り返しフラグを設定する。
 				flags |= MF_MENUBARBREAK;
 			}
+			// 折り返し設定が有効なら
+			else if (g_menuBreak)
+			{
+				// 折り返し位置かチェックする。
+				if (i % g_menuBreak == 0)
+				{
+					// 折り返しフラグを設定する。
+					flags |= MF_MENUBARBREAK;
+				}
+			}
+
+			// メニューアイテムを追加する。
 			::AppendMenu(menu, flags, CommandID::WINDOW + index, x.first);
+
+			// ウィンドウがタブの中に存在するなら
 			if (pane->m_tab.findTab(x.second.get()) != -1)
+			{
+				// メニューアイテムにチェックを入れる。
 				::CheckMenuItem(menu, CommandID::WINDOW + index, MF_CHECKED);
+			}
+
+			// カウンタをインクリメントする。
 			index++;
+			i++;
 		}
 	}
 

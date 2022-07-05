@@ -28,7 +28,10 @@
 #define IDC_INACTIVE_CAPTION_COLOR      1023
 #define IDC_INACTIVE_CAPTION_TEXT_COLOR 1024
 #define IDC_USE_THEME                   1025
-#define IDC_BOTTOM_TAB                  1026
+#define IDC_BORDER_WIDTH                1026
+#define IDC_CAPTION_HEIGHT              1027
+#define IDC_MENU_BREAK                  1028
+#define IDC_TAB_MODE                    1029
 
 // Next default values for new objects
 // 
@@ -37,7 +40,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1026
+#define _APS_NEXT_CONTROL_VALUE         1030
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
