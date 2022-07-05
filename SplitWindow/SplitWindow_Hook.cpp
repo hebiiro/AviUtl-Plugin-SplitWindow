@@ -55,11 +55,11 @@ void termHook()
 	MY_TRACE(_T("termHook()\n"));
 }
 
-void addWindowToMap(WindowPtr window, LPCTSTR name, HWND hwnd)
+void addShuttleToMap(ShuttlePtr shuttle, LPCTSTR name, HWND hwnd)
 {
-	g_windowMap[name] = window;
-	window->m_name = name;
-	window->init(hwnd);
+	g_shuttleMap[name] = shuttle;
+	shuttle->m_name = name;
+	shuttle->init(hwnd);
 }
 
 //---------------------------------------------------------------------
@@ -114,10 +114,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 		g_auin.initAviUtlAddress();
 
 		// 土台となるシングルウィンドウを作成する。
-		g_singleWindow = createSingleWindow();
-
-		// ルートペインを作成する。
-		g_root.reset(new Pane());
+		g_hub = createHub();
 
 		// コンテナのウィンドウクラスを登録する。
 		Container::registerWndClass();
@@ -127,7 +124,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 //		MY_TRACE_STR(windowName);
 
 		// AviUtl のポップアップウィンドウの親をシングルウィンドウに変更する。
-		parent = g_singleWindow;
+		parent = g_hub;
 	}
 
 	HWND hwnd = true_CreateWindowExA(exStyle, className, windowName, style, x, y, w, h, parent, menu, instance, param);
@@ -139,7 +136,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 			MY_TRACE_STR(windowName);
 
 			// AviUtl ウィンドウのコンテナの初期化。
-			addWindowToMap(g_aviutlWindow, _T("* AviUtl"), hwnd);
+			addShuttleToMap(g_aviutlWindow, _T("* AviUtl"), hwnd);
 		}
 		else if (::lstrcmpiA(windowName, "拡張編集") == 0)
 		{
@@ -156,49 +153,49 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 			}
 
 			// 拡張編集ウィンドウのコンテナの初期化。
-			addWindowToMap(g_exeditWindow, _T("* 拡張編集"), hwnd);
+			addShuttleToMap(g_exeditWindow, _T("* 拡張編集"), hwnd);
 		}
-		else if (parent && parent == g_singleWindow)
+		else if (parent && parent == g_hub)
 		{
 			MY_TRACE_STR(windowName);
 
 			// その他のプラグインウィンドウのコンテナの初期化。
-			WindowPtr window(new Window());
-			addWindowToMap(window, windowName, hwnd);
+			ShuttlePtr shuttle(new Shuttle());
+			addShuttleToMap(shuttle, windowName, hwnd);
 		}
 	}
 	else if (::lstrcmpiA(windowName, "ExtendedFilter") == 0)
 	{
 		// 設定ダイアログのコンテナの初期化。
-		addWindowToMap(g_settingDialog, _T("* 設定ダイアログ"), hwnd);
+		addShuttleToMap(g_settingDialog, _T("* 設定ダイアログ"), hwnd);
 
 		// すべてのウィンドウの初期化処理が終わったので
 		// ポストメッセージ先で最初のレイアウト計算を行う。
-		::PostMessage(g_singleWindow, WindowMessage::WM_POST_INIT, 0, 0);
+		::PostMessage(g_hub, WindowMessage::WM_POST_INIT, 0, 0);
 	}
 
 	return hwnd;
 }
 
-Window* getWindow(HWND hwnd)
+Shuttle* getWindow(HWND hwnd)
 {
 	// WS_CHILD スタイルがあるかチェックする。
 	DWORD style = ::GetWindowLong(hwnd, GWL_STYLE);
 	if (!(style & WS_CHILD)) return 0;
 
-	return Window::getWindow(hwnd);
+	return Shuttle::getShuttle(hwnd);
 }
 
 IMPLEMENT_HOOK_PROC(BOOL, WINAPI, MoveWindow, (HWND hwnd, int x, int y, int w, int h, BOOL repaint))
 {
-	Window* window = getWindow(hwnd);
+	Shuttle* shuttle = getWindow(hwnd);
 
-	if (!window) // Window を取得できない場合はデフォルト処理を行う。
+	if (!shuttle) // Shuttle を取得できない場合はデフォルト処理を行う。
 		return true_MoveWindow(hwnd, x, y, w, h, repaint);
 
 	MY_TRACE(_T("MoveWindow(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
 	MY_TRACE_HWND(hwnd);
-	MY_TRACE_WSTR((LPCWSTR)window->m_name);
+	MY_TRACE_WSTR((LPCWSTR)shuttle->m_name);
 
 	// ターゲットのウィンドウ位置を更新する。
 	BOOL result = true_MoveWindow(hwnd, x, y, w, h, repaint);
@@ -207,19 +204,19 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, MoveWindow, (HWND hwnd, int x, int y, int w, i
 	HWND parent = ::GetParent(hwnd);
 
 	// 親ウィンドウがドッキングコンテナなら
-	if (parent == window->m_dockContainer->m_hwnd)
+	if (parent == shuttle->m_dockContainer->m_hwnd)
 	{
 		// ドッキングコンテナにターゲットの新しいウィンドウ位置を算出させる。
-		window->m_dockContainer->onWndProc(parent, WM_SIZE, 0, 0);
+		shuttle->m_dockContainer->onWndProc(parent, WM_SIZE, 0, 0);
 	}
 	// 親ウィンドウがフローティングコンテナなら
-	else if (parent == window->m_floatContainer->m_hwnd)
+	else if (parent == shuttle->m_floatContainer->m_hwnd)
 	{
 		WINDOWPOS wp = {};
 		wp.x = x; wp.y = y; wp.cx = w; wp.cy = h;
 
 		// フローティングコンテナに自身の新しいウィンドウ位置を算出させる。
-		if (window->m_floatContainer->onSetContainerPos(&wp))
+		if (shuttle->m_floatContainer->onSetContainerPos(&wp))
 		{
 			// コンテナのウィンドウ位置を更新する。
 			true_MoveWindow(parent, wp.x, wp.y, wp.cx, wp.cy, repaint);
@@ -231,14 +228,14 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, MoveWindow, (HWND hwnd, int x, int y, int w, i
 
 IMPLEMENT_HOOK_PROC(BOOL, WINAPI, SetWindowPos, (HWND hwnd, HWND insertAfter, int x, int y, int w, int h, UINT flags))
 {
-	Window* window = getWindow(hwnd);
+	Shuttle* shuttle = getWindow(hwnd);
 
-	if (!window) // Window を取得できない場合はデフォルト処理を行う。
+	if (!shuttle) // Shuttle を取得できない場合はデフォルト処理を行う。
 		return true_SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
 
 	MY_TRACE(_T("SetWindowPos(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
 	MY_TRACE_HWND(hwnd);
-	MY_TRACE_WSTR((LPCWSTR)window->m_name);
+	MY_TRACE_WSTR((LPCWSTR)shuttle->m_name);
 
 	// ターゲットのウィンドウ位置を更新する。
 	BOOL result = true_SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
@@ -247,19 +244,19 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, SetWindowPos, (HWND hwnd, HWND insertAfter, in
 	HWND parent = ::GetParent(hwnd);
 
 	// 親ウィンドウがドッキングコンテナなら
-	if (parent == window->m_dockContainer->m_hwnd)
+	if (parent == shuttle->m_dockContainer->m_hwnd)
 	{
 		// ドッキングコンテナにターゲットの新しいウィンドウ位置を算出させる。
-		window->m_dockContainer->onWndProc(parent, WM_SIZE, 0, 0);
+		shuttle->m_dockContainer->onWndProc(parent, WM_SIZE, 0, 0);
 	}
 	// 親ウィンドウがフローティングコンテナなら
-	else if (parent == window->m_floatContainer->m_hwnd)
+	else if (parent == shuttle->m_floatContainer->m_hwnd)
 	{
 		WINDOWPOS wp = {};
 		wp.x = x; wp.y = y; wp.cx = w; wp.cy = h;
 
 		// フローティングコンテナに自身の新しいウィンドウ位置を算出させる。
-		if (window->m_floatContainer->onSetContainerPos(&wp))
+		if (shuttle->m_floatContainer->onSetContainerPos(&wp))
 		{
 			// コンテナのウィンドウ位置を更新する。
 			true_SetWindowPos(parent, insertAfter, wp.x, wp.y, wp.cx, wp.cy, flags);
@@ -278,13 +275,13 @@ HWND getMenuOwner(HWND hwnd)
 {
 	if (hwnd == g_aviutlWindow->m_hwnd)
 	{
-		hwnd = g_singleWindow;
+		hwnd = g_hub;
 	}
 	else
 	{
-		Window* window = Window::getWindow(hwnd);
-		if (window)
-			hwnd = window->m_floatContainer->m_hwnd;
+		Shuttle* shuttle = Shuttle::getShuttle(hwnd);
+		if (shuttle)
+			hwnd = shuttle->m_floatContainer->m_hwnd;
 	}
 
 	return hwnd;
@@ -324,8 +321,8 @@ IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowA, (LPCSTR className, LPCSTR windowN
 	// 「ショートカット再生」用。
 	if (className && windowName && ::lstrcmpiA(className, "AviUtl") == 0)
 	{
-		auto it = g_windowMap.find(windowName);
-		if (it != g_windowMap.end())
+		auto it = g_shuttleMap.find(windowName);
+		if (it != g_shuttleMap.end())
 			return it->second->m_hwnd;
 	}
 
@@ -374,7 +371,7 @@ IMPLEMENT_HOOK_PROC(HWND, WINAPI, GetWindow, (HWND hwnd, UINT cmd))
 
 		HWND retValue = true_GetWindow(hwnd, cmd);
 
-		if (retValue == g_singleWindow)
+		if (retValue == g_hub)
 		{
 			// 「スクリプト並べ替え管理」「シークバー＋」などの一般的なプラグイン用。
 			// シングルウィンドウがオーナーになっている場合は AviUtl ウィンドウを返すようにする。
@@ -423,11 +420,11 @@ IMPLEMENT_HOOK_PROC(LONG, WINAPI, SetWindowLongA, (HWND hwnd, int index, LONG ne
 	// 「拡張ツールバー」用。
 	if (index == GWL_HWNDPARENT)
 	{
-		Window* window = Window::getWindow(hwnd);
+		Shuttle* shuttle = Shuttle::getShuttle(hwnd);
 
-		if (window)
+		if (shuttle)
 		{
-			MY_TRACE(_T("Window が取得できるウィンドウは HWNDPARENT を変更できません\n"));
+			MY_TRACE(_T("Shuttle が取得できるウィンドウは HWNDPARENT を変更できません\n"));
 			return 0;
 		}
 	}

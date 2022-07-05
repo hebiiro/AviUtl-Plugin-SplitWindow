@@ -47,10 +47,7 @@ int showConfigDialog(HWND hwnd)
 	g_useTheme = Button_GetCheck(hwndUseTheme);
 
 	// レイアウトを再計算する。
-	calcLayout();
-
-	// 再描画する。
-	::InvalidateRect(hwnd, 0, FALSE);
+	calcAllLayout();
 
 	return retValue;
 }

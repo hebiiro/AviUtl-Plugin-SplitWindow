@@ -3,16 +3,16 @@
 
 //---------------------------------------------------------------------
 
-Container::Container(Window* window, DWORD style)
+Container::Container(Shuttle* shuttle, DWORD style)
 {
-	m_window = window;
+	m_shuttle = shuttle;
 	m_hwnd = ::CreateWindowEx(
 		0,
 		_T("SplitWindow.Container"),
 		_T("SplitWindow.Container"),
 		style,
 		100, 100, 200, 200,
-		g_singleWindow, 0, g_instance, 0);
+		g_hub, 0, g_instance, 0);
 
 	// ウィンドウハンドルにポインタを関連付ける。
 	setContainer(m_hwnd, this);
@@ -47,8 +47,8 @@ void Container::onResizeFloatContainer()
 	// ターゲットとコンテナのクライアント矩形が同じ位置になるように
 	// フローティングコンテナのウィンドウ矩形を調整する。
 
-	RECT rc; ::GetClientRect(m_window->m_hwnd, &rc);
-	::MapWindowPoints(::GetParent(m_window->m_hwnd), 0, (LPPOINT)&rc, 2);
+	RECT rc; ::GetClientRect(m_shuttle->m_hwnd, &rc);
+	::MapWindowPoints(::GetParent(m_shuttle->m_hwnd), 0, (LPPOINT)&rc, 2);
 	clientToWindow(m_hwnd, &rc);
 	int x = rc.left;
 	int y = rc.top;
@@ -64,7 +64,7 @@ BOOL Container::onSetContainerPos(WINDOWPOS* wp)
 	// フローティングコンテナのウィンドウ矩形を調整する。
 
 	RECT rc = { wp->x, wp->y, wp->x + wp->cx, wp->y + wp->cy }; // ターゲットのスクリーン座標のウィンドウ矩形。
-	windowToClient(m_window->m_hwnd, &rc); // ターゲットのスクリーン座標のクライアント矩形。
+	windowToClient(m_shuttle->m_hwnd, &rc); // ターゲットのスクリーン座標のクライアント矩形。
 	clientToWindow(m_hwnd, &rc); // コンテナのスクリーン座標のウィンドウ矩形。
 	wp->x = rc.left;
 	wp->y = rc.top;
@@ -93,12 +93,12 @@ LRESULT Container::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 			// ターゲットウィンドウの位置だけ変更する。サイズは変更しない。
 
 			RECT rc = { 0, 0 };
-			clientToWindow(m_window->m_hwnd, &rc);
-			m_window->onSetTargetWindowPos(&rc);
+			clientToWindow(m_shuttle->m_hwnd, &rc);
+			m_shuttle->onSetTargetWindowPos(&rc);
 			int x = rc.left;
 			int y = rc.top;
 
-			true_SetWindowPos(m_window->m_hwnd, 0,
+			true_SetWindowPos(m_shuttle->m_hwnd, 0,
 				x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
 
 			break;
@@ -108,7 +108,7 @@ LRESULT Container::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_RBUTTONDOWN:
 		{
 			// ターゲットウィンドウにフォーカスを当てる。
-			::SetFocus(m_window->m_hwnd);
+			::SetFocus(m_shuttle->m_hwnd);
 
 			break;
 		}
@@ -116,7 +116,7 @@ LRESULT Container::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_CLOSE:
 		{
 			// メッセージをそのままターゲットウィンドウに転送する。
-			return ::SendMessage(m_window->m_hwnd, message, wParam, lParam);
+			return ::SendMessage(m_shuttle->m_hwnd, message, wParam, lParam);
 		}
 	}
 
@@ -125,7 +125,7 @@ LRESULT Container::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 
 LRESULT Container::onTargetWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	return ::CallWindowProc(m_window->m_targetWndProc, hwnd, message, wParam, lParam);
+	return ::CallWindowProc(m_shuttle->m_targetWndProc, hwnd, message, wParam, lParam);
 }
 
 //---------------------------------------------------------------------
@@ -145,7 +145,7 @@ LRESULT CALLBACK Container::wndProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 {
 	Container* container = getContainer(hwnd);
 
-	return container->m_window->onContainerWndProc(container, hwnd, message, wParam, lParam);
+	return container->m_shuttle->onContainerWndProc(container, hwnd, message, wParam, lParam);
 }
 
 Container* Container::getContainer(HWND hwndContainer)

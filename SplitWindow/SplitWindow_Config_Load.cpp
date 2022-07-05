@@ -64,24 +64,14 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 			getPrivateProfileBool(element, L"useTheme", g_useTheme);
 		}
 
-		// 一旦すべてのペインをリセットする。
-		g_root->resetPane();
+		// <hub> を読み込む。
+		loadHub(element);
 
-		// ウィンドウ位置を取得する。
-		getPrivateProfileWindow(element, L"singleWindow", g_singleWindow);
+		// <colony> を読み込む。
+		loadColony(element);
 
-		// <pane> を読み込む。
-		MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"pane");
-		int c = min(1, nodeList->length);
-		for (int i = 0; i < c; i++)
-		{
-			MSXML2::IXMLDOMElementPtr paneElement = nodeList->item[i];
-
-			loadPane(paneElement, g_root);
-		}
-
-		// <floatWindow> を読み込む。
-		loadFloatWindow(element);
+		// <floatShuttle> を読み込む。
+		loadFloatShuttle(element);
 
 		MY_TRACE(_T("設定ファイルの読み込みに成功しました\n"));
 
@@ -93,6 +83,88 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 		MY_TRACE(_T("%s\n"), e.ErrorMessage());
 		return e.Error();
 	}
+}
+
+// <hub> を読み込む。
+HRESULT loadHub(const MSXML2::IXMLDOMElementPtr& element)
+{
+	MY_TRACE(_T("loadHub()\n"));
+
+	// <hub> を読み込む。
+	MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"hub");
+	int c = nodeList->length;
+	for (int i = 0; i < c; i++)
+	{
+		MSXML2::IXMLDOMElementPtr hubElement = nodeList->item[i];
+
+		HWND hwndHub = g_hub;
+		PanePtr root = getRootPane(hwndHub);
+
+		// 一旦すべてのペインをリセットする。
+		root->resetPane();
+
+		// ウィンドウ位置を読み込む。
+		getPrivateProfileWindow(hubElement, L"placement", hwndHub);
+
+		// <pane> を読み込む。
+		MSXML2::IXMLDOMNodeListPtr nodeList = hubElement->selectNodes(L"pane");
+		int c = min(1, nodeList->length);
+		for (int i = 0; i < c; i++)
+		{
+			MSXML2::IXMLDOMElementPtr paneElement = nodeList->item[i];
+
+			loadPane(paneElement, root);
+		}
+	}
+
+	return S_OK;
+}
+
+// <colony> を読み込む。
+HRESULT loadColony(const MSXML2::IXMLDOMElementPtr& element)
+{
+	MY_TRACE(_T("loadColony()\n"));
+
+	// 一旦すべてのコロニーを削除する。
+	g_colonySet.clear();
+
+	// <colony> を読み込む。
+	MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"colony");
+	int c = nodeList->length;
+	for (int i = 0; i < c; i++)
+	{
+		MSXML2::IXMLDOMElementPtr colonyElement = nodeList->item[i];
+
+		HWND hwndColony = createColony();
+		PanePtr root = getRootPane(hwndColony);
+
+		// ウィンドウテキストを読み込む。
+		_bstr_t name = L"";
+		getPrivateProfileName(colonyElement, L"name", name);
+		::SetWindowText(hwndColony, name);
+
+		// ウィンドウ位置を読み込む。
+		getPrivateProfileWindow(colonyElement, L"placement", hwndColony);
+
+		// コロニーが非表示なら
+		if (!::IsWindowVisible(hwndColony))
+		{
+			// 強制的に表示状態にする。
+			::ShowWindow(hwndColony, SW_SHOWNA);
+		}
+
+		// <pane> を読み込む。
+		MSXML2::IXMLDOMNodeListPtr nodeList = colonyElement->selectNodes(L"pane");
+		int c = min(1, nodeList->length);
+		for (int i = 0; i < c; i++)
+		{
+			MSXML2::IXMLDOMElementPtr paneElement = nodeList->item[i];
+
+			loadPane(paneElement, root);
+		}
+	}
+
+	return S_OK;
 }
 
 // <pane> を読み込む。
@@ -115,20 +187,20 @@ HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& paneElement, PanePtr pane)
 	MY_TRACE_INT(current);
 
 	{
-		// <dockWindow> を読み込む。
-		MSXML2::IXMLDOMNodeListPtr nodeList = paneElement->selectNodes(L"dockWindow");
+		// <dockShuttle> を読み込む。
+		MSXML2::IXMLDOMNodeListPtr nodeList = paneElement->selectNodes(L"dockShuttle");
 		int c = nodeList->length;
 		for (int i = 0; i < c; i++)
 		{
-			MSXML2::IXMLDOMElementPtr dockWindowElement = nodeList->item[i];
+			MSXML2::IXMLDOMElementPtr dockShuttleElement = nodeList->item[i];
 
 			_bstr_t name = L"";
-			getPrivateProfileName(dockWindowElement, L"name", name);
+			getPrivateProfileName(dockShuttleElement, L"name", name);
 			MY_TRACE_WSTR((LPCWSTR)name);
 
-			auto it = g_windowMap.find(name);
-			if (it != g_windowMap.end())
-				pane->addWindow(it->second.get());
+			auto it = g_shuttleMap.find(name);
+			if (it != g_shuttleMap.end())
+				pane->addShuttle(it->second.get());
 		}
 	}
 
@@ -142,40 +214,40 @@ HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& paneElement, PanePtr pane)
 	{
 		MSXML2::IXMLDOMElementPtr paneElement = nodeList->item[i];
 
-		pane->m_children[i].reset(new Pane());
+		pane->m_children[i].reset(new Pane(pane->m_owner));
 		loadPane(paneElement, pane->m_children[i]);
 	}
 
 	return S_OK;
 }
 
-// <floatWindow> を読み込む。
-HRESULT loadFloatWindow(const MSXML2::IXMLDOMElementPtr& element)
+// <floatShuttle> を読み込む。
+HRESULT loadFloatShuttle(const MSXML2::IXMLDOMElementPtr& element)
 {
-	MY_TRACE(_T("loadFloatWindow()\n"));
+	MY_TRACE(_T("loadFloatShuttle()\n"));
 
-	// <floatWindow> を読み込む。
-	MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"floatWindow");
+	// <floatShuttle> を読み込む。
+	MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"floatShuttle");
 	int c = nodeList->length;
 	for (int i = 0; i < c; i++)
 	{
-		MSXML2::IXMLDOMElementPtr floatWindowElement = nodeList->item[i];
+		MSXML2::IXMLDOMElementPtr floatShuttleElement = nodeList->item[i];
 
 		_bstr_t name = L"";
-		getPrivateProfileName(floatWindowElement, L"name", name);
+		getPrivateProfileName(floatShuttleElement, L"name", name);
 
-		auto it = g_windowMap.find(name);
-		if (it != g_windowMap.end())
+		auto it = g_shuttleMap.find(name);
+		if (it != g_shuttleMap.end())
 		{
-			WindowPtr window = it->second;
+			ShuttlePtr shuttle = it->second;
 
-			getPrivateProfileWindow(floatWindowElement, L"placement", window->m_floatContainer->m_hwnd);
+			getPrivateProfileWindow(floatShuttleElement, L"placement", shuttle->m_floatContainer->m_hwnd);
 
 			// フローティングコンテナが表示状態なら
-			if (::IsWindowVisible(window->m_floatContainer->m_hwnd))
+			if (::IsWindowVisible(shuttle->m_floatContainer->m_hwnd))
 			{
 				// ターゲットウィンドウを表示状態にする。
-				window->showTargetWindow();
+				shuttle->showTargetWindow();
 			}
 		}
 	}

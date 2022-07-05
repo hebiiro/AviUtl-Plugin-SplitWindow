@@ -195,8 +195,8 @@
     <ClInclude Include="Pane.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Shuttle.h" />
     <ClInclude Include="SplitWindow.h" />
-    <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConfigDialog.cpp" />
@@ -204,6 +204,10 @@
     <ClCompile Include="Container_Scroll.cpp" />
     <ClCompile Include="Container_Spread.cpp" />
     <ClCompile Include="Pane.cpp" />
+    <ClCompile Include="Shuttle.cpp" />
+    <ClCompile Include="Shuttle_AviUtlWindow.cpp" />
+    <ClCompile Include="Shuttle_ExEditWindow.cpp" />
+    <ClCompile Include="Shuttle_SettingDialog.cpp" />
     <ClCompile Include="SplitWindow.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -211,13 +215,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SplitWindow_Colony.cpp" />
     <ClCompile Include="SplitWindow_Config_Load.cpp" />
     <ClCompile Include="SplitWindow_Config_Save.cpp" />
     <ClCompile Include="SplitWindow_Hook.cpp" />
-    <ClCompile Include="Window.cpp" />
-    <ClCompile Include="Window_AviUtlWindow.cpp" />
-    <ClCompile Include="Window_ExEditWindow.cpp" />
-    <ClCompile Include="Window_SettingDialog.cpp" />
+    <ClCompile Include="SplitWindow_Hub.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SplitWindow.def" />

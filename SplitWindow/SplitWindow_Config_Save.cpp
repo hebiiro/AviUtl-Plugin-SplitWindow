@@ -54,14 +54,14 @@ HRESULT saveConfig(LPCWSTR fileName, BOOL _export)
 			setPrivateProfileBool(element, L"useTheme", g_useTheme);
 		}
 
-		// <singleWindow> にウィンドウ位置を保存する。
-		setPrivateProfileWindow(element, L"singleWindow", g_singleWindow);
+		// <hub> を作成する。
+		saveHub(element);
 
-		// <pane> を作成する。
-		savePane(element, g_root);
+		// <colony> を作成する。
+		saveColony(element);
 
-		// <floatWindow> を作成する。
-		saveFloatWindow(element);
+		// <floatShuttle> を作成する。
+		saveFloatShuttle(element);
 
 		return saveXMLDocument(document, fileName, L"UTF-16");
 	}
@@ -70,6 +70,53 @@ HRESULT saveConfig(LPCWSTR fileName, BOOL _export)
 		MY_TRACE(_T("%s\n"), e.ErrorMessage());
 		return e.Error();
 	}
+}
+
+// <hub> を作成する。
+HRESULT saveHub(const MSXML2::IXMLDOMElementPtr& element)
+{
+	MY_TRACE(_T("saveHub()\n"));
+
+	{
+		HWND hwndHub = g_hub;
+
+		// <hub> を作成する。
+		MSXML2::IXMLDOMElementPtr hubElement = appendElement(element, L"hub");
+
+		setPrivateProfileWindow(hubElement, L"placement", hwndHub);
+
+		PanePtr root = getRootPane(hwndHub);
+
+		// <pane> を作成する。
+		savePane(hubElement, root);
+	}
+
+	return S_OK;
+}
+
+// <colony> を作成する。
+HRESULT saveColony(const MSXML2::IXMLDOMElementPtr& element)
+{
+	MY_TRACE(_T("saveColony()\n"));
+
+	for (auto hwndColony : g_colonySet)
+	{
+		// <colony> を作成する。
+		MSXML2::IXMLDOMElementPtr colonyElement = appendElement(element, L"colony");
+
+		TCHAR name[MAX_PATH] = {};
+		::GetWindowText(hwndColony, name, MAX_PATH);
+
+		setPrivateProfileString(colonyElement, L"name", name);
+		setPrivateProfileWindow(colonyElement, L"placement", hwndColony);
+
+		PanePtr root = getRootPane(hwndColony);
+
+		// <pane> を作成する。
+		savePane(colonyElement, root);
+	}
+
+	return S_OK;
 }
 
 // <pane> を作成する。
@@ -90,18 +137,18 @@ HRESULT savePane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane)
 	int c = pane->m_tab.getTabCount();
 	for (int i = 0; i < c; i++)
 	{
-		Window* window = pane->m_tab.getWindow(i);
+		Shuttle* shuttle = pane->m_tab.getShuttle(i);
 
-		// <dockWindow> を作成する。
-		MSXML2::IXMLDOMElementPtr dockWindowElement = appendElement(paneElement, L"dockWindow");
+		// <dockShuttle> を作成する。
+		MSXML2::IXMLDOMElementPtr dockShuttleElement = appendElement(paneElement, L"dockShuttle");
 
-		for (auto& x : g_windowMap)
+		for (auto& x : g_shuttleMap)
 		{
-			if (window == x.second.get())
+			if (shuttle == x.second.get())
 			{
 				std::wstring name = getName(x.first);
 
-				setPrivateProfileString(dockWindowElement, L"name", name.c_str());
+				setPrivateProfileString(dockShuttleElement, L"name", name.c_str());
 
 				break;
 			}
@@ -117,20 +164,20 @@ HRESULT savePane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane)
 	return S_OK;
 }
 
-// <floatWindow> を作成する。
-HRESULT saveFloatWindow(const MSXML2::IXMLDOMElementPtr& element)
+// <floatShuttle> を作成する。
+HRESULT saveFloatShuttle(const MSXML2::IXMLDOMElementPtr& element)
 {
-	MY_TRACE(_T("saveFloatWindow()\n"));
+	MY_TRACE(_T("saveFloatShuttle()\n"));
 
-	for (auto x : g_windowMap)
+	for (auto x : g_shuttleMap)
 	{
-		// <floatWindow> を作成する。
-		MSXML2::IXMLDOMElementPtr floatWindowElement = appendElement(element, L"floatWindow");
+		// <floatShuttle> を作成する。
+		MSXML2::IXMLDOMElementPtr floatShuttleElement = appendElement(element, L"floatShuttle");
 
 		std::wstring name = getName(x.first);
 
-		setPrivateProfileString(floatWindowElement, L"name", name.c_str());
-		setPrivateProfileWindow(floatWindowElement, L"placement", x.second->m_floatContainer->m_hwnd);
+		setPrivateProfileString(floatShuttleElement, L"name", name.c_str());
+		setPrivateProfileWindow(floatShuttleElement, L"placement", x.second->m_floatContainer->m_hwnd);
 	}
 
 	return S_OK;

@@ -12,7 +12,7 @@ TabControl::TabControl(Pane* pane)
 		WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		TCS_FOCUSNEVER,
 		0, 0, 0, 0,
-		g_singleWindow, 0, g_instance, 0);
+		pane->m_owner, 0, g_instance, 0);
 
 	setPane(m_hwnd, pane);
 
@@ -41,7 +41,7 @@ int TabControl::getTabCount()
 	return ::SendMessage(m_hwnd, TCM_GETITEMCOUNT, 0, 0);
 }
 
-Window* TabControl::getWindow(int index)
+Shuttle* TabControl::getShuttle(int index)
 {
 	if (index == -1) return 0;
 
@@ -49,7 +49,7 @@ Window* TabControl::getWindow(int index)
 	item.mask = TCIF_PARAM;
 	::SendMessage(m_hwnd, TCM_GETITEM, index, (LPARAM)&item);
 
-	return (Window*)item.lParam;
+	return (Shuttle*)item.lParam;
 }
 
 int TabControl::getCurrentIndex()
@@ -69,15 +69,16 @@ int TabControl::hitTest(POINT point)
 {
 	TCHITTESTINFO hti = {};
 	hti.pt = point;
-	::MapWindowPoints(g_singleWindow, m_hwnd, &hti.pt, 1);
+	Pane* pane = getPane(m_hwnd);
+	::MapWindowPoints(pane->m_owner, m_hwnd, &hti.pt, 1);
 	return ::SendMessage(m_hwnd, TCM_HITTEST, 0, (LPARAM)&hti);
 }
 
-int TabControl::addTab(Window* window, LPCTSTR text, int index)
+int TabControl::addTab(Shuttle* shuttle, LPCTSTR text, int index)
 {
 	TCITEM item = {};
 	item.mask = TCIF_PARAM | TCIF_TEXT;
-	item.lParam = (LPARAM)window;
+	item.lParam = (LPARAM)shuttle;
 	item.pszText = (LPTSTR)text;
 	return ::SendMessage(m_hwnd, TCM_INSERTITEM, index, (LPARAM)&item);
 }
@@ -92,12 +93,12 @@ void TabControl::deleteAllTabs()
 	::SendMessage(m_hwnd, TCM_DELETEALLITEMS, 0, 0);
 }
 
-int TabControl::findTab(Window* window)
+int TabControl::findTab(Shuttle* shuttle)
 {
 	int c = getTabCount();
 	for (int i = 0; i < c; i++)
 	{
-		if (getWindow(i) == window)
+		if (getShuttle(i) == shuttle)
 			return i;
 	}
 
@@ -131,17 +132,18 @@ void TabControl::changeCurrent()
 	int c = getTabCount();
 	for (int i = 0; i < c; i++)
 	{
-		Window* window = getWindow(i);
+		Shuttle* shuttle = getShuttle(i);
 
-		::ShowWindow(window->m_dockContainer->m_hwnd, (i == current) ? SW_SHOW : SW_HIDE);
+		::ShowWindow(shuttle->m_dockContainer->m_hwnd, (i == current) ? SW_SHOW : SW_HIDE);
 	}
 
-	::InvalidateRect(g_singleWindow, &getPane(m_hwnd)->m_position, FALSE);
+	Pane* pane = getPane(m_hwnd);
+	::InvalidateRect(pane->m_owner, &pane->m_position, FALSE);
 }
 
-void TabControl::changeText(Window* window, LPCTSTR text)
+void TabControl::changeText(Shuttle* shuttle, LPCTSTR text)
 {
-	int index = findTab(window);
+	int index = findTab(shuttle);
 	if (index == -1) return;
 
 	TCITEM item = {};
@@ -152,8 +154,9 @@ void TabControl::changeText(Window* window, LPCTSTR text)
 
 //---------------------------------------------------------------------
 
-Pane::Pane()
+Pane::Pane(HWND owner)
 	: m_tab(this)
+	, m_owner(owner)
 {
 }
 
@@ -161,24 +164,24 @@ Pane::~Pane()
 {
 }
 
-Window* Pane::getActiveWindow()
+Shuttle* Pane::getActiveShuttle()
 {
 	int current = m_tab.getCurrentIndex();
-	return m_tab.getWindow(current);
+	return m_tab.getShuttle(current);
 }
 
-int Pane::addWindow(Window* window, int index)
+int Pane::addShuttle(Shuttle* shuttle, int index)
 {
-	MY_TRACE(_T("Pane::addWindow(0x%08X, %d)\n"), window, index);
+	MY_TRACE(_T("Pane::addShuttle(0x%08X, %d)\n"), shuttle, index);
 
 	// ウィンドウはすでにドッキング済みなので何もしない。
-	if (m_tab.findTab(window) != -1) return -1;
+	if (m_tab.findTab(shuttle) != -1) return -1;
 
 	// ウィンドウが他のペインとドッキング済みなら
-	if (window->m_pane)
+	if (shuttle->m_pane)
 	{
 		// 他のペインとのドッキングを解除させる。
-		window->m_pane->removeWindow(window);
+		shuttle->m_pane->removeShuttle(shuttle);
 	}
 
 	// 追加位置が無効の場合は末尾に追加する。
@@ -187,28 +190,28 @@ int Pane::addWindow(Window* window, int index)
 
 	// ウィンドウテキストを取得する。
 	TCHAR text[MAX_PATH] = {};
-	::GetWindowText(window->m_hwnd, text, MAX_PATH);
+	::GetWindowText(shuttle->m_hwnd, text, MAX_PATH);
 
 	// タブを追加する。
-	int result = m_tab.addTab(window, text, index);
+	int result = m_tab.addTab(shuttle, text, index);
 
 	// ウィンドウをドッキング状態にする。
 	RECT rcDock = getDockRect();
-	window->m_pane = this;
-	window->dockWindow(&rcDock);
+	shuttle->m_pane = this;
+	shuttle->dockWindow(&rcDock);
 
 	return result;
 }
 
-void Pane::removeWindow(Window* window)
+void Pane::removeShuttle(Shuttle* shuttle)
 {
-	MY_TRACE(_T("Pane::removeWindow(0x%08X)\n"), window);
+	MY_TRACE(_T("Pane::removeShuttle(0x%08X)\n"), shuttle);
 
 	// ウィンドウ側からの参照を削除する。
-	window->m_pane = 0;
+	shuttle->m_pane = 0;
 
 	// ペイン側からの参照を削除する。
-	int index = m_tab.findTab(window);
+	int index = m_tab.findTab(shuttle);
 	if (index != -1)
 	{
 		BOOL same = index == m_tab.getCurrentIndex();
@@ -234,19 +237,19 @@ void Pane::removeWindow(Window* window)
 	}
 
 	// ウィンドウをフローティング状態にする。
-	window->floatWindow();
+	shuttle->floatWindow();
 }
 
-void Pane::removeAllWindows()
+void Pane::removeAllShuttles()
 {
 	// すべてのウィンドウをフローティング状態にする。
 	int c = m_tab.getTabCount();
 	for (int i = 0; i < c; i++)
 	{
-		Window* window = m_tab.getWindow(i);
+		Shuttle* shuttle = m_tab.getShuttle(i);
 
-		window->m_pane = 0;
-		window->floatWindow();
+		shuttle->m_pane = 0;
+		shuttle->floatWindow();
 	}
 
 	// すべてのタブを削除する。
@@ -256,7 +259,7 @@ void Pane::removeAllWindows()
 // ペインをリセットする。
 void Pane::resetPane()
 {
-	removeAllWindows();
+	removeAllShuttles();
 
 	for (auto& child : m_children)
 	{
@@ -284,8 +287,8 @@ void Pane::setSplitMode(int splitMode)
 		{
 			m_border = getWidth(m_position) / 2;
 
-			if (!m_children[0]) m_children[0].reset(new Pane());
-			if (!m_children[1]) m_children[1].reset(new Pane());
+			if (!m_children[0]) m_children[0].reset(new Pane(m_owner));
+			if (!m_children[1]) m_children[1].reset(new Pane(m_owner));
 
 			break;
 		}
@@ -293,14 +296,14 @@ void Pane::setSplitMode(int splitMode)
 		{
 			m_border = getHeight(m_position) / 2;
 
-			if (!m_children[0]) m_children[0].reset(new Pane());
-			if (!m_children[1]) m_children[1].reset(new Pane());
+			if (!m_children[0]) m_children[0].reset(new Pane(m_owner));
+			if (!m_children[1]) m_children[1].reset(new Pane(m_owner));
 
 			break;
 		}
 	}
 
-	removeAllWindows();
+	removeAllShuttles();
 }
 
 inline int clamp(int x, int minValue, int maxValue)
@@ -448,7 +451,7 @@ void Pane::recalcLayout(LPCRECT rc)
 {
 //	MY_TRACE(_T("Pane::recalcLayout()\n"));
 
-	if (::IsIconic(g_singleWindow))
+	if (::IsIconic(m_owner))
 		return;
 
 	// このペインの位置を更新する。
@@ -521,9 +524,9 @@ void Pane::recalcLayout(LPCRECT rc)
 
 		for (int i = 0; i < c; i++)
 		{
-			Window* window = m_tab.getWindow(i);
+			Shuttle* shuttle = m_tab.getShuttle(i);
 
-			window->resizeDockContainer(&rcDock); // ウィンドウをリサイズする。
+			shuttle->resizeDockContainer(&rcDock); // ウィンドウをリサイズする。
 		}
 
 		return; // ウィンドウを持つペインは子ペインを持たないのでここで終了する。
@@ -758,9 +761,9 @@ void Pane::drawBorder(HDC dc, HBRUSH brush)
 
 void Pane::drawCaption(HDC dc)
 {
-	Window* window = getActiveWindow();
+	Shuttle* shuttle = getActiveShuttle();
 
-	if (window)
+	if (shuttle)
 	{
 		RECT rc = getCaptionRect();
 
@@ -768,19 +771,19 @@ void Pane::drawCaption(HDC dc)
 			return; // キャプションがはみ出てしまう場合は何もしない。
 
 		RECT rcMenu = getMenuRect();
-		BOOL hasMenu = !!::GetMenu(window->m_hwnd);
+		BOOL hasMenu = !!::GetMenu(shuttle->m_hwnd);
 
 		// ウィンドウテキストを取得する。
 		WCHAR text[MAX_PATH] = {};
-		::GetWindowTextW(window->m_hwnd, text, MAX_PATH);
+		::GetWindowTextW(shuttle->m_hwnd, text, MAX_PATH);
 
 		// テーマを使用するなら
 		if (g_useTheme)
 		{
 			// ウィンドウの状態から stateId を取得する。
 			int stateId = CS_ACTIVE;
-			if (::GetFocus() != window->m_hwnd) stateId = CS_INACTIVE;
-			if (!::IsWindowEnabled(window->m_hwnd)) stateId = CS_DISABLED;
+			if (::GetFocus() != shuttle->m_hwnd) stateId = CS_INACTIVE;
+			if (!::IsWindowEnabled(shuttle->m_hwnd)) stateId = CS_DISABLED;
 
 			// テーマ API を使用してタイトルを描画する。
 			::DrawThemeBackground(g_theme, dc, WP_CAPTION, stateId, &rc, 0);
@@ -809,7 +812,7 @@ void Pane::drawCaption(HDC dc)
 			COLORREF captionColor = g_activeCaptionColor;
 			COLORREF captionTextColor = g_activeCaptionTextColor;
 
-			if (::GetFocus() != window->m_hwnd)
+			if (::GetFocus() != shuttle->m_hwnd)
 			{
 				captionColor = g_inactiveCaptionColor;
 				captionTextColor = g_inactiveCaptionTextColor;

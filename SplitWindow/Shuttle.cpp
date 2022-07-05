@@ -3,13 +3,13 @@
 
 //---------------------------------------------------------------------
 
-void Window::init(HWND hwnd)
+void Shuttle::init(HWND hwnd)
 {
 	// ターゲットのウィンドウハンドルを格納する。
 	m_hwnd = hwnd;
 
 	// ウィンドウハンドルにポインタを結び付ける。
-	setWindow(m_hwnd, this);
+	setShuttle(m_hwnd, this);
 
 	// コンテナを作成する。
 	m_dockContainer.reset(onCreateDockContainer());
@@ -47,7 +47,7 @@ void Window::init(HWND hwnd)
 	m_targetWndProc = (WNDPROC)::SetWindowLong(m_hwnd, GWL_WNDPROC, (LONG)targetWndProc);
 }
 
-Container* Window::onCreateDockContainer()
+Container* Shuttle::onCreateDockContainer()
 {
 	// ドッキングコンテナのスタイルを決定する。
 	DWORD style = ::GetWindowLong(m_hwnd, GWL_STYLE);
@@ -60,7 +60,7 @@ Container* Window::onCreateDockContainer()
 		return new ScrollContainer(this, dockStyle);
 }
 
-Container* Window::onCreateFloatContainer()
+Container* Shuttle::onCreateFloatContainer()
 {
 	// フローティングコンテナのスタイルを決定する。
 	DWORD style = ::GetWindowLong(m_hwnd, GWL_STYLE);
@@ -74,7 +74,7 @@ Container* Window::onCreateFloatContainer()
 		return new Container(this, floatStyle);
 }
 
-DWORD Window::onGetTargetNewStyle()
+DWORD Shuttle::onGetTargetNewStyle()
 {
 	// ※ WS_CAPTION を外さないとエディットボックスでマウス処理が行われなくなる。
 	DWORD style = ::GetWindowLong(m_hwnd, GWL_STYLE);
@@ -82,17 +82,17 @@ DWORD Window::onGetTargetNewStyle()
 	return style;
 }
 
-void Window::onSetTargetWindowPos(LPRECT rc)
+void Shuttle::onSetTargetWindowPos(LPRECT rc)
 {
 	// デフォルトでは何もしない。
 }
 
-LRESULT Window::onContainerWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT Shuttle::onContainerWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	return container->onWndProc(hwnd, message, wParam, lParam);
 }
 
-LRESULT Window::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT Shuttle::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -124,22 +124,28 @@ LRESULT Window::onTargetWndProc(Container* container, HWND hwnd, UINT message, W
 		}
 	case WM_SETTEXT:
 		{
-			// タブのテキストを更新する。
-			if (m_pane) m_pane->m_tab.changeText(this, (LPCTSTR)lParam);
-
 			// コンテナのウィンドウテキストを更新する。
 			::SetWindowText(::GetParent(hwnd), (LPCTSTR)lParam);
 
-			// ペインのタイトル部分を再描画する。
-			::InvalidateRect(g_singleWindow, 0, FALSE);
+			if (m_pane)
+			{
+				// タブのテキストを更新する。
+				m_pane->m_tab.changeText(this, (LPCTSTR)lParam);
+
+				// ペインのタイトル部分を再描画する。
+				::InvalidateRect(m_pane->m_owner, &m_pane->m_position, FALSE);
+			}
 
 			break;
 		}
 	case WM_SETFOCUS:
 	case WM_KILLFOCUS:
 		{
-			// ペインのタイトル部分を再描画する。
-			::InvalidateRect(g_singleWindow, 0, FALSE);
+			if (m_pane)
+			{
+				// ペインのタイトル部分を再描画する。
+				::InvalidateRect(m_pane->m_owner, &m_pane->m_position, FALSE);
+			}
 
 			break;
 		}
@@ -165,7 +171,7 @@ LRESULT Window::onTargetWndProc(Container* container, HWND hwnd, UINT message, W
 }
 
 // ターゲットウィンドウを表示する。
-void Window::showTargetWindow()
+void Shuttle::showTargetWindow()
 {
 	// ターゲットウィンドウが非表示状態なら
 	if (!::IsWindowVisible(m_hwnd))
@@ -184,11 +190,16 @@ void Window::showTargetWindow()
 	}
 }
 
-void Window::dockWindow(LPCRECT rc)
+void Shuttle::dockWindow(LPCRECT rc)
 {
 	showTargetWindow();
 
 	resizeDockContainer(rc);
+
+	MY_TRACE_HWND(m_pane->m_owner);
+
+	// ドッキングコンテナの親ウィンドウを切り替える。
+	::SetParent(m_dockContainer->m_hwnd, m_pane->m_owner);
 
 	// 親ウィンドウをドッキングコンテナに切り替える。
 	::SetParent(m_hwnd, m_dockContainer->m_hwnd);
@@ -196,7 +207,7 @@ void Window::dockWindow(LPCRECT rc)
 	::ShowWindow(m_dockContainer->m_hwnd, SW_SHOW);
 }
 
-void Window::floatWindow()
+void Shuttle::floatWindow()
 {
 	TCHAR text[MAX_PATH] = {};
 	::GetWindowText(m_hwnd, text, MAX_PATH);
@@ -209,33 +220,36 @@ void Window::floatWindow()
 	::ShowWindow(m_dockContainer->m_hwnd, SW_HIDE);
 	if (::IsWindowVisible(m_hwnd))
 		::ShowWindow(m_floatContainer->m_hwnd, SW_SHOW);
+
+	// ドッキングコンテナの親ウィンドウを切り替える。
+	::SetParent(m_dockContainer->m_hwnd, g_hub);
 }
 
-void Window::resizeDockContainer(LPCRECT rc)
+void Shuttle::resizeDockContainer(LPCRECT rc)
 {
 	m_dockContainer->onResizeDockContainer(rc);
 }
 
-void Window::resizeFloatContainer()
+void Shuttle::resizeFloatContainer()
 {
 	m_floatContainer->onResizeFloatContainer();
 }
 
-LRESULT CALLBACK Window::targetWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Shuttle::targetWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	HWND hwndContainer = ::GetParent(hwnd);
 	Container* container = Container::getContainer(hwndContainer);
-	return container->m_window->onTargetWndProc(container, hwnd, message, wParam, lParam);
+	return container->m_shuttle->onTargetWndProc(container, hwnd, message, wParam, lParam);
 }
 
-Window* Window::getWindow(HWND hwnd)
+Shuttle* Shuttle::getShuttle(HWND hwnd)
 {
-	return (Window*)::GetProp(hwnd, _T("SplitWindow.Window"));
+	return (Shuttle*)::GetProp(hwnd, _T("SplitWindow.Shuttle"));
 }
 
-void Window::setWindow(HWND hwnd, Window* window)
+void Shuttle::setShuttle(HWND hwnd, Shuttle* window)
 {
-	::SetProp(hwnd, _T("SplitWindow.Window"), window);
+	::SetProp(hwnd, _T("SplitWindow.Shuttle"), window);
 }
 
 //---------------------------------------------------------------------

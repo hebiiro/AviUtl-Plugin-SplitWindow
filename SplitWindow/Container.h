@@ -7,9 +7,9 @@ class Container
 public:
 
 	HWND m_hwnd = 0;
-	Window* m_window = 0;
+	Shuttle* m_shuttle = 0;
 
-	Container(Window* window, DWORD style);
+	Container(Shuttle* shuttle, DWORD style);
 	virtual ~Container();
 
 	virtual void onResizeDockContainer(LPCRECT rc);
@@ -30,7 +30,7 @@ class SpreadContainer : public Container
 {
 public:
 
-	SpreadContainer(Window* window, DWORD style);
+	SpreadContainer(Shuttle* shuttle, DWORD style);
 	virtual ~SpreadContainer();
 
 	virtual LRESULT onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -42,7 +42,7 @@ class ScrollContainer : public Container
 {
 public:
 
-	ScrollContainer(Window* window, DWORD style);
+	ScrollContainer(Shuttle* shuttle, DWORD style);
 	virtual ~ScrollContainer();
 
 	void updateScrollBar(HWND hwndContainer);

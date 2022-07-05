@@ -5,21 +5,21 @@
 
 void AviUtlWindow::init(HWND hwnd)
 {
-	Window::init(hwnd);
+	Shuttle::init(hwnd);
 
 	// フローティングコンテナのアイコンを設定する。
 	HICON icon = (HICON)::GetClassLong(m_hwnd, GCL_HICON);
 	::SendMessage(m_floatContainer->m_hwnd, WM_SETICON, ICON_SMALL, (LPARAM)icon);
 	::SendMessage(m_floatContainer->m_hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon);
 
-	// シングルウィンドウのアイコンを設定する。
-	::SetClassLong(g_singleWindow, GCL_HICON, (LONG)icon);
-	::SetClassLong(g_singleWindow, GCL_HICONSM, (LONG)icon);
+	// ハブのアイコンを設定する。
+	::SetClassLong(g_hub, GCL_HICON, (LONG)icon);
+	::SetClassLong(g_hub, GCL_HICONSM, (LONG)icon);
 }
 
 LRESULT AviUtlWindow::onContainerWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	return Window::onContainerWndProc(container, hwnd, message, wParam, lParam);
+	return Shuttle::onContainerWndProc(container, hwnd, message, wParam, lParam);
 }
 
 LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -42,7 +42,11 @@ LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT mess
 			// コンテナのウィンドウテキストを更新する。
 			::SetWindowText(::GetParent(hwnd), (LPCTSTR)lParam);
 
-			::InvalidateRect(g_singleWindow, 0, FALSE);
+			if (m_pane)
+			{
+				// ペインのタイトル部分を再描画する。
+				::InvalidateRect(m_pane->m_owner, &m_pane->m_position, FALSE);
+			}
 
 			// シングルウィンドウのウィンドウテキストを更新する。
 
@@ -62,13 +66,13 @@ LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT mess
 				::StringCbCopyA(fileName, sizeof(fileName), "無題");
 			}
 			::StringCbCatA(fileName, sizeof(fileName), " - AviUtl");
-			::SetWindowTextA(g_singleWindow, fileName);
+			::SetWindowTextA(g_hub, fileName);
 
 			return container->onTargetWndProc(hwnd, message, wParam, lParam);
 		}
 	}
 
-	return Window::onTargetWndProc(container, hwnd, message, wParam, lParam);
+	return Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
 }
 
 //---------------------------------------------------------------------

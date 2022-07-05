@@ -7,7 +7,7 @@ struct Label { LPCWSTR label; int value; };
 //---------------------------------------------------------------------
 
 #include "Pane.h"
-#include "Window.h"
+#include "Shuttle.h"
 #include "Container.h"
 
 //---------------------------------------------------------------------
@@ -22,6 +22,7 @@ struct CommandID
 	static const UINT SHOW_CONFIG_DIALOG = 1000;
 	static const UINT IMPORT_LAYOUT = 1001;
 	static const UINT EXPORT_LAYOUT = 1002;
+	static const UINT CREATE_COLONY = 1003;
 
 	static const UINT SPLIT_MODE_NONE = 1000;
 	static const UINT SPLIT_MODE_VERT = 1001;
@@ -49,17 +50,21 @@ const Label g_tabModeLabel[] =
 
 //---------------------------------------------------------------------
 
+typedef std::set<HWND> HWNDSet;
+
+//---------------------------------------------------------------------
+
 extern AviUtlInternal g_auin;
 extern HINSTANCE g_instance;
-extern HWND g_singleWindow;
+extern HWND g_hub;
 extern HTHEME g_theme;
 
 extern AviUtlWindowPtr g_aviutlWindow;
 extern ExEditWindowPtr g_exeditWindow;
 extern SettingDialogPtr g_settingDialog;
 
-extern PanePtr g_root;
-extern WindowMap g_windowMap;
+extern HWNDSet g_colonySet;
+extern ShuttleMap g_shuttleMap;
 extern PanePtr g_hotBorderPane;
 
 extern int g_borderWidth;
@@ -77,21 +82,32 @@ extern BOOL g_useTheme;
 
 //---------------------------------------------------------------------
 
-HWND createSingleWindow();
-void calcLayout();
-void showPaneMenu();
+PanePtr getRootPane(HWND hwndColony);
+void calcLayout(HWND hwndColony);
+void calcAllLayout();
+BOOL showTargetMenu(HWND hwndColony, POINT point);
+void showPaneMenu(HWND hwndColony);
 void fillBackground(HDC dc, LPCRECT rc);
-LRESULT CALLBACK singleWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+HWND createColony();
+LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+HWND createHub();
+LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HRESULT loadConfig();
 HRESULT loadConfig(LPCWSTR fileName, BOOL _import);
+HRESULT loadHub(const MSXML2::IXMLDOMElementPtr& element);
+HRESULT loadColony(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane);
-HRESULT loadFloatWindow(const MSXML2::IXMLDOMElementPtr& element);
+HRESULT loadFloatShuttle(const MSXML2::IXMLDOMElementPtr& element);
 
 HRESULT saveConfig();
 HRESULT saveConfig(LPCWSTR fileName, BOOL _export);
+HRESULT saveHub(const MSXML2::IXMLDOMElementPtr& element);
+HRESULT saveColony(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT savePane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane);
-HRESULT saveFloatWindow(const MSXML2::IXMLDOMElementPtr& element);
+HRESULT saveFloatShuttle(const MSXML2::IXMLDOMElementPtr& element);
 
 //---------------------------------------------------------------------
 

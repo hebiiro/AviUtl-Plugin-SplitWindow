@@ -3,8 +3,8 @@
 
 //---------------------------------------------------------------------
 
-SpreadContainer::SpreadContainer(Window* window, DWORD style)
-	: Container(window, style)
+SpreadContainer::SpreadContainer(Shuttle* shuttle, DWORD style)
+	: Container(shuttle, style)
 {
 }
 
@@ -21,14 +21,14 @@ LRESULT SpreadContainer::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 			// ターゲットウィンドウをコンテナウィンドウのクライアント領域全体まで広げる。
 
 			RECT rc; ::GetClientRect(hwnd, &rc);
-			clientToWindow(m_window->m_hwnd, &rc);
-			m_window->onSetTargetWindowPos(&rc);
+			clientToWindow(m_shuttle->m_hwnd, &rc);
+			m_shuttle->onSetTargetWindowPos(&rc);
 			int x = rc.left;
 			int y = rc.top;
 			int w = rc.right - rc.left;
 			int h = rc.bottom - rc.top;
 
-			true_SetWindowPos(m_window->m_hwnd,
+			true_SetWindowPos(m_shuttle->m_hwnd,
 				0, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
 
 			return 0;

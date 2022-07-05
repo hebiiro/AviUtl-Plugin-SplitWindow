@@ -3,8 +3,8 @@
 
 //---------------------------------------------------------------------
 
-ScrollContainer::ScrollContainer(Window* window, DWORD style)
-	: Container(window, style)
+ScrollContainer::ScrollContainer(Shuttle* shuttle, DWORD style)
+	: Container(shuttle, style)
 {
 }
 
@@ -15,7 +15,7 @@ ScrollContainer::~ScrollContainer()
 // スクロール範囲を更新する。
 void ScrollContainer::updateScrollBar(HWND hwndContainer)
 {
-	RECT rc; ::GetClientRect(m_window->m_hwnd, &rc);
+	RECT rc; ::GetClientRect(m_shuttle->m_hwnd, &rc);
 	int w = rc.right - rc.left;
 	int h = rc.bottom - rc.top;
 
@@ -65,14 +65,14 @@ void ScrollContainer::recalcLayout(HWND hwndContainer)
 	// ターゲットウィンドウの位置のみを調整する。
 
 	RECT rc = { 0, 0 };
-	clientToWindow(m_window->m_hwnd, &rc);
+	clientToWindow(m_shuttle->m_hwnd, &rc);
 	int x = rc.left;
 	int y = rc.top;
 
 	x -= ::GetScrollPos(hwndContainer, SB_HORZ);
 	y -= ::GetScrollPos(hwndContainer, SB_VERT);
 
-	true_SetWindowPos(m_window->m_hwnd, 0,
+	true_SetWindowPos(m_shuttle->m_hwnd, 0,
 		x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
@@ -81,7 +81,7 @@ void ScrollContainer::onResizeDockContainer(LPCRECT rc)
 {
 	// フローティングコンテナを取得する。
 	// (ただし、ドッキング完了後に呼び出された場合は parent は自分自身 (m_hwnd と同じ) になる)
-	HWND parent = ::GetParent(m_window->m_hwnd);
+	HWND parent = ::GetParent(m_shuttle->m_hwnd);
 
 	// rc からドッキングコンテナの新しい位置を取得する。
 	int x = rc->left;
@@ -113,7 +113,7 @@ void ScrollContainer::onResizeDockContainer(LPCRECT rc)
 void ScrollContainer::onResizeFloatContainer()
 {
 	// ドッキングコンテナを取得する。
-	HWND parent = ::GetParent(m_window->m_hwnd);
+	HWND parent = ::GetParent(m_shuttle->m_hwnd);
 
 	// ドッキングコンテナのクライアント矩形からフローティングコンテナの新しい位置を取得する。
 	RECT rc; ::GetClientRect(parent, &rc);

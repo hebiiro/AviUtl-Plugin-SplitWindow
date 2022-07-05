@@ -5,7 +5,7 @@
 
 void SettingDialog::init(HWND hwnd)
 {
-	Window::init(hwnd);
+	Shuttle::init(hwnd);
 }
 
 Container* SettingDialog::onCreateDockContainer()
@@ -46,7 +46,7 @@ LRESULT SettingDialog::onContainerWndProc(Container* container, HWND hwnd, UINT 
 		}
 	}
 
-	return Window::onContainerWndProc(container, hwnd, message, wParam, lParam);
+	return Shuttle::onContainerWndProc(container, hwnd, message, wParam, lParam);
 }
 
 LRESULT SettingDialog::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -64,7 +64,7 @@ LRESULT SettingDialog::onTargetWndProc(Container* container, HWND hwnd, UINT mes
 		}
 	}
 
-	return Window::onTargetWndProc(container, hwnd, message, wParam, lParam);
+	return Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
 }
 
 //---------------------------------------------------------------------

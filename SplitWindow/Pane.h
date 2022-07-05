@@ -29,10 +29,10 @@ static const Label g_originLabel[] =
 };
 
 class Pane; typedef std::shared_ptr<Pane> PanePtr;
-class Window; typedef std::shared_ptr<Window> WindowPtr;
+class Shuttle; typedef std::shared_ptr<Shuttle> ShuttlePtr;
 class Container; typedef std::shared_ptr<Container> ContainerPtr;
 
-typedef std::map<_bstr_t, WindowPtr> WindowMap;
+typedef std::map<_bstr_t, ShuttlePtr> ShuttleMap;
 
 class AviUtlWindow; typedef std::shared_ptr<AviUtlWindow> AviUtlWindowPtr;
 class ExEditWindow; typedef std::shared_ptr<ExEditWindow> ExEditWindowPtr;
@@ -51,23 +51,24 @@ public:
 	static void setPane(HWND hwnd, Pane* pane);
 
 	int getTabCount();
-	Window* getWindow(int index);
+	Shuttle* getShuttle(int index);
 	int getCurrentIndex();
 	int setCurrentIndex(int index);
 	int hitTest(POINT point);
-	int addTab(Window* window, LPCTSTR text, int index);
+	int addTab(Shuttle* shuttle, LPCTSTR text, int index);
 	void deleteTab(int index);
 	void deleteAllTabs();
-	int findTab(Window* window);
+	int findTab(Shuttle* shuttle);
 	int moveTab(int from, int to);
 	void changeCurrent();
-	void changeText(Window* window, LPCTSTR text);
+	void changeText(Shuttle* shuttle, LPCTSTR text);
 };
 
 class Pane : public std::enable_shared_from_this<Pane>
 {
 public:
 
+	HWND m_owner = 0;
 	RECT m_position = {};
 	int m_splitMode = SplitMode::none;
 	int m_origin = Origin::bottomRight;
@@ -77,13 +78,13 @@ public:
 	TabControl m_tab;
 	PanePtr m_children[2];
 
-	Pane();
+	Pane(HWND owner);
 	~Pane();
 
-	Window* getActiveWindow();
-	int addWindow(Window* window, int index = -1);
-	void removeWindow(Window* window);
-	void removeAllWindows();
+	Shuttle* getActiveShuttle();
+	int addShuttle(Shuttle* shuttle, int index = -1);
+	void removeShuttle(Shuttle* shuttle);
+	void removeAllShuttles();
 
 	void resetPane();
 	void setSplitMode(int splitMode);

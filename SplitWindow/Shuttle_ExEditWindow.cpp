@@ -5,7 +5,7 @@
 
 void ExEditWindow::init(HWND hwnd)
 {
-	Window::init(hwnd);
+	Shuttle::init(hwnd);
 
 	// フローティングコンテナのアイコンを設定する。
 	HICON icon = (HICON)::GetClassLong(m_hwnd, GCL_HICON);
@@ -46,12 +46,12 @@ void ExEditWindow::onSetTargetWindowPos(LPRECT rc)
 
 LRESULT ExEditWindow::onContainerWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	return Window::onContainerWndProc(container, hwnd, message, wParam, lParam);
+	return Shuttle::onContainerWndProc(container, hwnd, message, wParam, lParam);
 }
 
 LRESULT ExEditWindow::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	return Window::onTargetWndProc(container, hwnd, message, wParam, lParam);
+	return Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
 }
 
 //---------------------------------------------------------------------

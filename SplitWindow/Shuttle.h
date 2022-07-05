@@ -2,7 +2,7 @@
 
 //---------------------------------------------------------------------
 
-class Window
+class Shuttle
 {
 public:
 
@@ -29,13 +29,13 @@ public:
 	virtual void resizeFloatContainer();
 
 	static LRESULT CALLBACK targetWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-	static Window* getWindow(HWND hwnd);
-	static void setWindow(HWND hwnd, Window* window);
+	static Shuttle* getShuttle(HWND hwnd);
+	static void setShuttle(HWND hwnd, Shuttle* shuttle);
 };
 
 //---------------------------------------------------------------------
 
-class AviUtlWindow : public Window
+class AviUtlWindow : public Shuttle
 {
 public:
 
@@ -46,7 +46,7 @@ public:
 
 //---------------------------------------------------------------------
 
-class ExEditWindow : public Window
+class ExEditWindow : public Shuttle
 {
 public:
 
@@ -59,7 +59,7 @@ public:
 
 //---------------------------------------------------------------------
 
-class SettingDialog : public Window
+class SettingDialog : public Shuttle
 {
 public:
 

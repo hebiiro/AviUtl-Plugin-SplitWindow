@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <string>
+#include <set>
 #include <map>
 
 #import <msxml3.dll>

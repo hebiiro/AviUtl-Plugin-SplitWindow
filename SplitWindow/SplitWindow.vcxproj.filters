@@ -24,9 +24,6 @@
     <ClInclude Include="..\..\Common\WinUtility.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Window.h">
-      <Filter>Element</Filter>
-    </ClInclude>
     <ClInclude Include="Pane.h">
       <Filter>Element</Filter>
     </ClInclude>
@@ -39,6 +36,9 @@
     <ClInclude Include="Container.h">
       <Filter>Element</Filter>
     </ClInclude>
+    <ClInclude Include="Shuttle.h">
+      <Filter>Element</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SplitWindow.cpp" />
@@ -46,9 +46,6 @@
     <ClCompile Include="SplitWindow_Config_Save.cpp" />
     <ClCompile Include="ConfigDialog.cpp" />
     <ClCompile Include="SplitWindow_Hook.cpp" />
-    <ClCompile Include="Window.cpp">
-      <Filter>Element</Filter>
-    </ClCompile>
     <ClCompile Include="Pane.cpp">
       <Filter>Element</Filter>
     </ClCompile>
@@ -58,19 +55,24 @@
     <ClCompile Include="Container.cpp">
       <Filter>Element</Filter>
     </ClCompile>
-    <ClCompile Include="Window_SettingDialog.cpp">
-      <Filter>Element</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_AviUtlWindow.cpp">
-      <Filter>Element</Filter>
-    </ClCompile>
     <ClCompile Include="Container_Spread.cpp">
       <Filter>Element</Filter>
     </ClCompile>
     <ClCompile Include="Container_Scroll.cpp">
       <Filter>Element</Filter>
     </ClCompile>
-    <ClCompile Include="Window_ExEditWindow.cpp">
+    <ClCompile Include="SplitWindow_Colony.cpp" />
+    <ClCompile Include="SplitWindow_Hub.cpp" />
+    <ClCompile Include="Shuttle.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Shuttle_AviUtlWindow.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Shuttle_ExEditWindow.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Shuttle_SettingDialog.cpp">
       <Filter>Element</Filter>
     </ClCompile>
   </ItemGroup>
