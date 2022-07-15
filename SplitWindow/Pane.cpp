@@ -16,7 +16,7 @@ TabControl::TabControl(Pane* pane)
 
 	setPane(m_hwnd, pane);
 
-	SYS_INFO si = {};
+	AviUtl::SysInfo si = {};
 	g_auin.get_sys_info(0, &si);
 	::SendMessage(m_hwnd, WM_SETFONT, (WPARAM)si.hfont, TRUE);
 }

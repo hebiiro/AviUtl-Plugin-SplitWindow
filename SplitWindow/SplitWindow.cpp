@@ -311,7 +311,7 @@ void fillBackground(HDC dc, LPCRECT rc)
 		int partId = WP_DIALOG;
 		int stateId = 0;
 
-		// テーマ API を使用してボーダーを描画する。
+		// テーマ API を使用して背景を描画する。
 		::DrawThemeBackground(g_theme, dc, partId, stateId, rc, 0);
 	}
 	// テーマを使用しないなら

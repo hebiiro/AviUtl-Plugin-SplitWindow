@@ -115,7 +115,7 @@ LRESULT Shuttle::onTargetWndProc(Container* container, HWND hwnd, UINT message, 
 		}
 	case WM_SHOWWINDOW:
 		{
-			MY_TRACE(_T("WM_SHOWWINDOW, 0x%08X, 0x%08X\n"), wParam, lParam);
+//			MY_TRACE(_T("WM_SHOWWINDOW, 0x%08X, 0x%08X\n"), wParam, lParam);
 
 			// ターゲットウィンドウの表示状態が変更されたらコンテナもそれに追従する。
 			::ShowWindow(::GetParent(hwnd), wParam ? SW_SHOW : SW_HIDE);
@@ -141,6 +141,10 @@ LRESULT Shuttle::onTargetWndProc(Container* container, HWND hwnd, UINT message, 
 	case WM_SETFOCUS:
 	case WM_KILLFOCUS:
 		{
+			// 「キーフレームプラグイン」用。
+			WPARAM active = (message == WM_SETFOCUS) ? WA_ACTIVE : WA_INACTIVE;
+			::SendMessage(hwnd, WM_ACTIVATE, active, 0);
+
 			if (m_pane)
 			{
 				// ペインのタイトル部分を再描画する。

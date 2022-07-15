@@ -193,9 +193,9 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, MoveWindow, (HWND hwnd, int x, int y, int w, i
 	if (!shuttle) // Shuttle を取得できない場合はデフォルト処理を行う。
 		return true_MoveWindow(hwnd, x, y, w, h, repaint);
 
-	MY_TRACE(_T("MoveWindow(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
-	MY_TRACE_HWND(hwnd);
-	MY_TRACE_WSTR((LPCWSTR)shuttle->m_name);
+//	MY_TRACE(_T("MoveWindow(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
+//	MY_TRACE_HWND(hwnd);
+//	MY_TRACE_WSTR((LPCWSTR)shuttle->m_name);
 
 	// ターゲットのウィンドウ位置を更新する。
 	BOOL result = true_MoveWindow(hwnd, x, y, w, h, repaint);
@@ -233,9 +233,9 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, SetWindowPos, (HWND hwnd, HWND insertAfter, in
 	if (!shuttle) // Shuttle を取得できない場合はデフォルト処理を行う。
 		return true_SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
 
-	MY_TRACE(_T("SetWindowPos(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
-	MY_TRACE_HWND(hwnd);
-	MY_TRACE_WSTR((LPCWSTR)shuttle->m_name);
+//	MY_TRACE(_T("SetWindowPos(0x%08X, %d, %d, %d, %d)\n"), hwnd, x, y, w, h);
+//	MY_TRACE_HWND(hwnd);
+//	MY_TRACE_WSTR((LPCWSTR)shuttle->m_name);
 
 	// ターゲットのウィンドウ位置を更新する。
 	BOOL result = true_SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
@@ -344,9 +344,25 @@ IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowExA, (HWND parent, HWND childAfter, 
 {
 	MY_TRACE(_T("FindWindowExA(0x%08X, 0x%08X, %hs, %hs)\n"), parent, childAfter, className, windowName);
 
-	// 「テキスト編集補助プラグイン」用。
-	if (!parent && className && ::lstrcmpiA(className, "ExtendedFilterClass") == 0)
-		return g_settingDialog->m_hwnd;
+	if (!parent && className)
+	{
+		// 「テキスト編集補助プラグイン」用。
+		if (::lstrcmpiA(className, "ExtendedFilterClass") == 0)
+		{
+			return g_settingDialog->m_hwnd;
+		}
+		// 「キーフレームプラグイン」用。
+		else if (::lstrcmpiA(className, "AviUtl") == 0 && windowName)
+		{
+			auto it = g_shuttleMap.find(windowName);
+			if (it != g_shuttleMap.end())
+			{
+				MY_TRACE(_T("%hs を返します\n"), windowName);
+
+				return it->second->m_hwnd;
+			}
+		}
+	}
 
 	return true_FindWindowExA(parent, childAfter, className, windowName);
 }
