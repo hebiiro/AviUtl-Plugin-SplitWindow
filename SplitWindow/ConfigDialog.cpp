@@ -24,6 +24,8 @@ int showConfigDialog(HWND hwnd)
 	ComboBox_SetCurSel(hwndTabMode, g_tabMode);
 	HWND hwndUseTheme = ::GetDlgItem(dialog, IDC_USE_THEME);
 	Button_SetCheck(hwndUseTheme, g_useTheme);
+	HWND hwndForceScroll = ::GetDlgItem(dialog, IDC_FORCE_SCROLL);
+	Button_SetCheck(hwndForceScroll, g_forceScroll);
 
 	::EnableWindow(hwnd, FALSE);
 	int retValue = dialog.doModal();
@@ -45,6 +47,7 @@ int showConfigDialog(HWND hwnd)
 	g_menuBreak = ::GetDlgItemInt(dialog, IDC_MENU_BREAK, 0, FALSE);
 	g_tabMode = ComboBox_GetCurSel(hwndTabMode);
 	g_useTheme = Button_GetCheck(hwndUseTheme);
+	g_forceScroll = Button_GetCheck(hwndForceScroll);
 
 	// レイアウトを再計算する。
 	calcAllLayout();

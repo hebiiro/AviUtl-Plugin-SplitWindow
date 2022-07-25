@@ -52,6 +52,7 @@ HRESULT saveConfig(LPCWSTR fileName, BOOL _export)
 			setPrivateProfileColor(element, L"inactiveCaptionColor", g_inactiveCaptionColor);
 			setPrivateProfileColor(element, L"inactiveCaptionTextColor", g_inactiveCaptionTextColor);
 			setPrivateProfileBool(element, L"useTheme", g_useTheme);
+			setPrivateProfileBool(element, L"forceScroll", g_forceScroll);
 		}
 
 		// <hub> を作成する。

@@ -62,6 +62,7 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 			getPrivateProfileColor(element, L"inactiveCaptionColor", g_inactiveCaptionColor);
 			getPrivateProfileColor(element, L"inactiveCaptionTextColor", g_inactiveCaptionTextColor);
 			getPrivateProfileBool(element, L"useTheme", g_useTheme);
+			getPrivateProfileBool(element, L"forceScroll", g_forceScroll);
 		}
 
 		// <hub> を読み込む。

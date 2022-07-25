@@ -186,7 +186,7 @@ LRESULT ScrollContainer::onWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 		}
 	case WM_MOUSEWHEEL:
 		{
-			MY_TRACE(_T("ScrollContainer::containerWndProc(WM_MOUSEWHEEL, %d)\n"), wParam);
+			MY_TRACE(_T("ScrollContainer::containerWndProc(WM_MOUSEWHEEL, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			// ホイールに応じてスクロールしてからレイアウトを再計算する。
 			scroll(hwnd, SB_VERT, ((int)wParam > 0) ? SB_PAGEUP : SB_PAGEDOWN);

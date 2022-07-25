@@ -204,10 +204,10 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			MY_TRACE_HEX(g_theme);
 
 			HMENU menu = ::GetSystemMenu(hwnd, FALSE);
-			::InsertMenu(menu, 0, MF_BYPOSITION | MF_STRING, CommandID::IMPORT_LAYOUT, _T("レイアウトのインポート"));
-			::InsertMenu(menu, 1, MF_BYPOSITION | MF_STRING, CommandID::EXPORT_LAYOUT, _T("レイアウトのエクスポート"));
-			::InsertMenu(menu, 2, MF_BYPOSITION | MF_STRING, CommandID::SHOW_CONFIG_DIALOG, _T("SplitWindowの設定"));
-			::InsertMenu(menu, 3, MF_BYPOSITION | MF_STRING, CommandID::CREATE_COLONY, _T("コロニーを新規作成"));
+			::InsertMenu(menu, 0, MF_BYPOSITION | MF_STRING, CommandID::CREATE_COLONY, _T("コロニーを新規作成"));
+			::InsertMenu(menu, 1, MF_BYPOSITION | MF_STRING, CommandID::IMPORT_LAYOUT, _T("レイアウトのインポート"));
+			::InsertMenu(menu, 2, MF_BYPOSITION | MF_STRING, CommandID::EXPORT_LAYOUT, _T("レイアウトのエクスポート"));
+			::InsertMenu(menu, 3, MF_BYPOSITION | MF_STRING, CommandID::SHOW_CONFIG_DIALOG, _T("SplitWindowの設定"));
 			::InsertMenu(menu, 4, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 			break;

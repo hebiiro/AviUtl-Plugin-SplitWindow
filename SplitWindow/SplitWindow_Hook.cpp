@@ -70,7 +70,11 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, ComboBoxProc, (HWND hwnd, UINT message
 	{
 	case WM_MOUSEWHEEL:
 		{
-			return ::DefWindowProcW(hwnd, message, wParam, lParam);
+			// スクロールを優先する場合はコンボボックスのウィンドウ関数は呼ばない。
+			if (g_forceScroll)
+				return ::DefWindowProcW(hwnd, message, wParam, lParam);
+
+			break;
 		}
 	}
 
@@ -83,6 +87,7 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, TrackBarProc, (HWND hwnd, UINT message
 	{
 	case WM_MOUSEWHEEL:
 		{
+			// トラックバーのウィンドウ関数は呼ばない。
 			return ::DefWindowProcW(hwnd, message, wParam, lParam);
 		}
 	}
