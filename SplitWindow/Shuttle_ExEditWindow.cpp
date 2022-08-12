@@ -11,22 +11,6 @@ void ExEditWindow::init(HWND hwnd)
 	HICON icon = (HICON)::GetClassLong(m_hwnd, GCL_HICON);
 	::SendMessage(m_floatContainer->m_hwnd, WM_SETICON, ICON_SMALL, (LPARAM)icon);
 	::SendMessage(m_floatContainer->m_hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon);
-
-	DWORD exedit = g_auin.GetExEdit();
-
-	// スポイト処理の ::GetPixel() をフックする。
-	hookAbsoluteCall(exedit + 0x22128, Dropper_GetPixel);
-
-	{
-		// キーボードフック処理の ::GetActiveWindow() をフックする。
-
-		BYTE code[6];
-		code[0] = (BYTE)0x90; // NOP
-		code[1] = (BYTE)0xBD; // MOV EBP,DWORD
-		*(DWORD*)&code[2] = (DWORD)KeyboardHook_GetActiveWindow;
-
-		writeCode(exedit + 0x30D0E, code, sizeof(code));
-	}
 }
 
 DWORD ExEditWindow::onGetTargetNewStyle()

@@ -62,6 +62,50 @@ void addShuttleToMap(ShuttlePtr shuttle, LPCTSTR name, HWND hwnd)
 	shuttle->init(hwnd);
 }
 
+void hookExEdit()
+{
+	// 拡張編集が読み込まれたのでアドレスを取得する。
+	g_auin.initExEditAddress();
+
+	DWORD exedit = g_auin.GetExEdit();
+
+	// rikky_memory.auf + rikky_module.dll 用のフック。
+	true_ScriptParamDlgProc = writeAbsoluteAddress(exedit + 0x3454 + 1, hook_ScriptParamDlgProc);
+
+	// スポイト処理の ::GetPixel() をフックする。
+	hookAbsoluteCall(exedit + 0x22128, Dropper_GetPixel);
+
+	{
+		// キーボードフック処理の ::GetActiveWindow() をフックする。
+
+		BYTE code[6];
+		code[0] = (BYTE)0x90; // NOP
+		code[1] = (BYTE)0xBD; // MOV EBP,DWORD
+		*(DWORD*)&code[2] = (DWORD)KeyboardHook_GetActiveWindow;
+
+		writeCode(exedit + 0x30D0E, code, sizeof(code));
+	}
+
+	for (int i = 0; i < 10; i++)
+	{
+		// vsthost_N.auf 内の ::DialogBoxIndirectParamA() をフックする。
+
+		TCHAR fileName[MAX_PATH] = {};
+		::StringCbPrintf(fileName, sizeof(fileName), _T("vsthost_%d.auf"), i + 1);
+		MY_TRACE_TSTR(fileName);
+
+		HMODULE vsthost = ::GetModuleHandle(fileName);
+		MY_TRACE_HEX(vsthost);
+
+		if (vsthost)
+		{
+			true_vsthost_DialogBoxIndirectParamA = hookImportFunc(
+				vsthost, "DialogBoxIndirectParamA", hook_vsthost_DialogBoxIndirectParamA);
+			MY_TRACE_HEX(true_vsthost_DialogBoxIndirectParamA);
+		}
+	}
+}
+
 //---------------------------------------------------------------------
 
 IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, ComboBoxProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))
@@ -147,15 +191,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 		{
 			MY_TRACE_STR(windowName);
 
-			{
-				// 拡張編集が読み込まれたのでアドレスを取得する。
-				g_auin.initExEditAddress();
-
-				DWORD exedit = g_auin.GetExEdit();
-
-				// rikky_memory.auf + rikky_module.dll 用のフック。
-				true_ScriptParamDlgProc = writeAbsoluteAddress(exedit + 0x3454 + 1, hook_ScriptParamDlgProc);
-			}
+			hookExEdit();
 
 			// 拡張編集ウィンドウのコンテナの初期化。
 			addShuttleToMap(g_exeditWindow, _T("* 拡張編集"), hwnd);
@@ -471,6 +507,23 @@ IMPLEMENT_HOOK_PROC_NULL(INT_PTR, CALLBACK, ScriptParamDlgProc, (HWND hwnd, UINT
 	return true_ScriptParamDlgProc(hwnd, message, wParam, lParam);
 }
 
+IMPLEMENT_HOOK_PROC_NULL(INT_PTR, WINAPI, vsthost_DialogBoxIndirectParamA, (HINSTANCE instance, LPCDLGTEMPLATEA dialogTemplate, HWND parent, DLGPROC dlgProc, LPARAM initParam))
+{
+	MY_TRACE(_T("vsthost_DialogBoxIndirectParamA()\n"));
+
+	HWND dummy = createPopupWindow(parent);
+
+	HWND activeWindow = ::GetActiveWindow();
+	::EnableWindow(parent, FALSE);
+	INT_PTR result = true_vsthost_DialogBoxIndirectParamA(instance, dialogTemplate, dummy, dlgProc, initParam);
+	::EnableWindow(parent, TRUE);
+	::SetActiveWindow(activeWindow);
+
+	::DestroyWindow(dummy);
+
+	return result;
+}
+
 COLORREF WINAPI Dropper_GetPixel(HDC _dc, int x, int y)
 {
 	MY_TRACE(_T("Dropper_GetPixel(0x%08X, %d, %d)\n"), _dc, x, y);
@@ -530,7 +583,7 @@ EXTERN_C BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
 		{
 			// ロケールを設定する。
 			// これをやらないと日本語テキストが文字化けするので最初に実行する。
-			_tsetlocale(LC_ALL, _T(""));
+			_tsetlocale(LC_CTYPE, _T(""));
 
 			MY_TRACE(_T("DLL_PROCESS_ATTACH\n"));
 

@@ -325,4 +325,29 @@ void fillBackground(HDC dc, LPCRECT rc)
 	}
 }
 
+// 他のポップアップウィンドウの土台となるポップアップウィンドウを作成する。
+HWND createPopupWindow(HWND parent)
+{
+	MY_TRACE(_T("createPopupWindow(0x%08X)\n"), parent);
+
+	WNDCLASS wc = {};
+	wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+	wc.hCursor = ::LoadCursor(0, IDC_ARROW);
+	wc.lpfnWndProc = ::DefWindowProc;
+	wc.hInstance = g_instance;
+	wc.lpszClassName = _T("PopupWindow");
+	::RegisterClass(&wc);
+
+	HWND hwnd = ::CreateWindowEx(
+		0,
+		_T("PopupWindow"),
+		_T("PopupWindow"),
+		WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME |
+		WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		parent, 0, g_instance, 0);
+
+	return hwnd;
+}
+
 //---------------------------------------------------------------------

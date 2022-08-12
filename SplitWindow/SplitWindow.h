@@ -89,6 +89,7 @@ void calcAllLayout();
 BOOL showTargetMenu(HWND hwndColony, POINT point);
 void showPaneMenu(HWND hwndColony);
 void fillBackground(HDC dc, LPCRECT rc);
+HWND createPopupWindow(HWND parent);
 
 HWND createColony();
 LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -128,6 +129,7 @@ DECLARE_HOOK_PROC(BOOL, WINAPI, EnumThreadWindows, (DWORD threadId, WNDENUMPROC 
 DECLARE_HOOK_PROC(BOOL, WINAPI, EnumWindows, (WNDENUMPROC enumProc, LPARAM lParam));
 DECLARE_HOOK_PROC(LONG, WINAPI, SetWindowLongA, (HWND hwnd, int index, LONG newLong));
 DECLARE_HOOK_PROC(INT_PTR, CALLBACK, ScriptParamDlgProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam));
+DECLARE_HOOK_PROC(INT_PTR, WINAPI, vsthost_DialogBoxIndirectParamA, (HINSTANCE instance, LPCDLGTEMPLATEA dialogTemplate, HWND parent, DLGPROC dlgProc, LPARAM initParam));
 
 COLORREF WINAPI Dropper_GetPixel(HDC dc, int x, int y);
 HWND WINAPI KeyboardHook_GetActiveWindow();
