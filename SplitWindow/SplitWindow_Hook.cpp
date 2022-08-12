@@ -556,7 +556,17 @@ HWND WINAPI KeyboardHook_GetActiveWindow()
 {
 	MY_TRACE(_T("KeyboardHook_GetActiveWindow()\n"));
 
+	HWND activeWindow = ::GetActiveWindow();
+	MY_TRACE_HWND(activeWindow);
+
 	HWND focus = ::GetFocus();
+	MY_TRACE_HWND(focus);
+
+	if (!focus)
+	{
+		MY_TRACE(_T("focus が 0 なので、設定ダイアログを返します\n"));
+		return g_settingDialog->m_hwnd;
+	}
 
 	if (isAncestor(g_settingDialog->m_hwnd, focus))
 	{
@@ -570,7 +580,7 @@ HWND WINAPI KeyboardHook_GetActiveWindow()
 		return g_exeditWindow->m_hwnd;
 	}
 
-	return ::GetActiveWindow();
+	return activeWindow;
 }
 
 //---------------------------------------------------------------------
