@@ -11,6 +11,22 @@ void ExEditWindow::init(HWND hwnd)
 	HICON icon = (HICON)::GetClassLong(m_hwnd, GCL_HICON);
 	::SendMessage(m_floatContainer->m_hwnd, WM_SETICON, ICON_SMALL, (LPARAM)icon);
 	::SendMessage(m_floatContainer->m_hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon);
+
+	WNDCLASS wc = {};
+	wc.style = 0;
+	wc.hCursor = 0;
+	wc.lpfnWndProc = ::DefWindowProc;
+	wc.hInstance = ::GetModuleHandle(_T("exedit.auf"));
+	wc.lpszClassName = _T("AviUtl"); // 「VoiceroidUtil」用。
+	ATOM atom = ::RegisterClass(&wc);
+
+	m_dummy = true_CreateWindowExA(
+		WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,
+		_T("AviUtl"),
+		_T("拡張編集"),
+		WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+		0, 0, 0, 0,
+		g_hub, 0, wc.hInstance, 0);
 }
 
 DWORD ExEditWindow::onGetTargetNewStyle()
@@ -35,6 +51,22 @@ LRESULT ExEditWindow::onContainerWndProc(Container* container, HWND hwnd, UINT m
 
 LRESULT ExEditWindow::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	switch (message)
+	{
+	case WM_SHOWWINDOW:
+		{
+			::ShowWindow(m_dummy, wParam ? SW_SHOW : SW_HIDE);
+
+			break;
+		}
+	case WM_SETTEXT:
+		{
+			::SetWindowText(m_dummy, (LPCTSTR)lParam);
+
+			break;
+		}
+	}
+
 	return Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
 }
 

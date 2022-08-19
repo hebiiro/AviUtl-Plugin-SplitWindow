@@ -50,6 +50,8 @@ class ExEditWindow : public Shuttle
 {
 public:
 
+	HWND m_dummy = 0;
+
 	virtual void init(HWND hwnd);
 	virtual DWORD onGetTargetNewStyle();
 	virtual void onSetTargetWindowPos(LPRECT rc);

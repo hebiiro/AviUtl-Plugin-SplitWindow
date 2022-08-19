@@ -186,6 +186,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 
 			// AviUtl ウィンドウのコンテナの初期化。
 			addShuttleToMap(g_aviutlWindow, _T("* AviUtl"), hwnd);
+			::SetProp(g_hub, _T("AviUtlWindow"), hwnd);
 		}
 		else if (::lstrcmpiA(windowName, "拡張編集") == 0)
 		{
@@ -195,6 +196,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 
 			// 拡張編集ウィンドウのコンテナの初期化。
 			addShuttleToMap(g_exeditWindow, _T("* 拡張編集"), hwnd);
+			::SetProp(g_hub, _T("ExEditWindow"), hwnd);
 		}
 		else if (parent && parent == g_hub)
 		{
@@ -209,6 +211,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 	{
 		// 設定ダイアログのコンテナの初期化。
 		addShuttleToMap(g_settingDialog, _T("* 設定ダイアログ"), hwnd);
+		::SetProp(g_hub, _T("SettingDialog"), hwnd);
 
 		// すべてのウィンドウの初期化処理が終わったので
 		// ポストメッセージ先で最初のレイアウト計算を行う。
