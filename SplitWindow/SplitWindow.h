@@ -69,6 +69,7 @@ extern PanePtr g_hotBorderPane;
 
 extern int g_borderWidth;
 extern int g_captionHeight;
+extern int g_tabHeight;
 extern int g_menuBreak;
 extern int g_tabMode;
 extern COLORREF g_fillColor;

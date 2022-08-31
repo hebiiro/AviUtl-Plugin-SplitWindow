@@ -33,6 +33,7 @@
 #define IDC_MENU_BREAK                  1028
 #define IDC_TAB_MODE                    1029
 #define IDC_FORCE_SCROLL                1030
+#define IDC_TAB_HEIGHT                  1031
 
 // Next default values for new objects
 // 

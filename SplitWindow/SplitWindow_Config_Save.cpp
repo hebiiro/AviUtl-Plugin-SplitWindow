@@ -42,6 +42,7 @@ HRESULT saveConfig(LPCWSTR fileName, BOOL _export)
 		{
 			setPrivateProfileInt(element, L"borderWidth", g_borderWidth);
 			setPrivateProfileInt(element, L"captionHeight", g_captionHeight);
+			setPrivateProfileInt(element, L"tabHeight", g_tabHeight);
 			setPrivateProfileInt(element, L"menuBreak", g_menuBreak);
 			setPrivateProfileLabel(element, L"tabMode", g_tabMode, g_tabModeLabel);
 			setPrivateProfileColor(element, L"fillColor", g_fillColor);

@@ -371,7 +371,7 @@ RECT Pane::getDockRect()
 				return RECT
 				{
 					m_position.left,
-					m_position.top + g_captionHeight,
+					m_position.top + max(g_captionHeight, g_tabHeight),
 					m_position.right,
 					m_position.bottom,
 				};
@@ -381,7 +381,7 @@ RECT Pane::getDockRect()
 				return RECT
 				{
 					m_position.left,
-					m_position.top + g_captionHeight * 2,
+					m_position.top + g_captionHeight + g_tabHeight,
 					m_position.right,
 					m_position.bottom,
 				};
@@ -393,7 +393,7 @@ RECT Pane::getDockRect()
 					m_position.left,
 					m_position.top + g_captionHeight,
 					m_position.right,
-					m_position.bottom - g_captionHeight,
+					m_position.bottom - g_tabHeight,
 				};
 			}
 		}
@@ -469,7 +469,7 @@ void Pane::recalcLayout(LPCRECT rc)
 				int x = m_position.left + g_captionHeight;
 				int y = m_position.top;
 				int w = getWidth(m_position) - g_captionHeight;
-				int h = g_captionHeight;
+				int h = max(g_captionHeight, g_tabHeight);
 
 				modifyStyle(m_tab.m_hwnd, TCS_BOTTOM, 0);
 
@@ -484,7 +484,7 @@ void Pane::recalcLayout(LPCRECT rc)
 				int x = m_position.left;
 				int y = m_position.top + g_captionHeight;
 				int w = getWidth(m_position);
-				int h = g_captionHeight;
+				int h = g_tabHeight;
 
 				modifyStyle(m_tab.m_hwnd, TCS_BOTTOM, 0);
 
@@ -497,9 +497,9 @@ void Pane::recalcLayout(LPCRECT rc)
 		case TabMode::bottom: // タブを下に表示するなら
 			{
 				int x = m_position.left;
-				int y = m_position.bottom - g_captionHeight;
+				int y = m_position.bottom - g_tabHeight;
 				int w = getWidth(m_position);
-				int h = g_captionHeight;
+				int h = g_tabHeight;
 
 				modifyStyle(m_tab.m_hwnd, 0, TCS_BOTTOM);
 

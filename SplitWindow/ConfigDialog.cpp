@@ -16,6 +16,7 @@ int showConfigDialog(HWND hwnd)
 	::SetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, g_inactiveCaptionTextColor, FALSE);
 	::SetDlgItemInt(dialog, IDC_BORDER_WIDTH, g_borderWidth, FALSE);
 	::SetDlgItemInt(dialog, IDC_CAPTION_HEIGHT, g_captionHeight, FALSE);
+	::SetDlgItemInt(dialog, IDC_TAB_HEIGHT, g_tabHeight, FALSE);
 	::SetDlgItemInt(dialog, IDC_MENU_BREAK, g_menuBreak, FALSE);
 	HWND hwndTabMode = ::GetDlgItem(dialog, IDC_TAB_MODE);
 	ComboBox_AddString(hwndTabMode, _T("タイトル"));
@@ -44,6 +45,7 @@ int showConfigDialog(HWND hwnd)
 	g_inactiveCaptionTextColor = ::GetDlgItemInt(dialog, IDC_INACTIVE_CAPTION_TEXT_COLOR, 0, FALSE);
 	g_borderWidth = ::GetDlgItemInt(dialog, IDC_BORDER_WIDTH, 0, FALSE);
 	g_captionHeight = ::GetDlgItemInt(dialog, IDC_CAPTION_HEIGHT, 0, FALSE);
+	g_tabHeight = ::GetDlgItemInt(dialog, IDC_TAB_HEIGHT, 0, FALSE);
 	g_menuBreak = ::GetDlgItemInt(dialog, IDC_MENU_BREAK, 0, FALSE);
 	g_tabMode = ComboBox_GetCurSel(hwndTabMode);
 	g_useTheme = Button_GetCheck(hwndUseTheme);

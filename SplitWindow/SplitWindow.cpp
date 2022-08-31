@@ -26,6 +26,7 @@ PanePtr g_hotBorderPane;
 
 int g_borderWidth = 8;
 int g_captionHeight = 24;
+int g_tabHeight = 24;
 int g_menuBreak = 30;
 int g_tabMode = TabMode::bottom;
 COLORREF g_fillColor = RGB(0x99, 0x99, 0x99);
