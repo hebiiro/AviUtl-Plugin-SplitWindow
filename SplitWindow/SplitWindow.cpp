@@ -164,6 +164,9 @@ void showPaneMenu(HWND hwndColony)
 	::AppendMenu(menu, MF_STRING, CommandID::MOVE_TO_RIGHT, _T("右に移動する"));
 	if (ht == -1 || ht >= c - 1)
 		::EnableMenuItem(menu, CommandID::MOVE_TO_RIGHT, MF_GRAYED | MF_DISABLED);
+	::AppendMenu(menu, MF_STRING, CommandID::IS_BORDER_LOCKED, _T("ボーダーをロック"));
+	if (pane->m_isBorderLocked)
+		::CheckMenuItem(menu, CommandID::IS_BORDER_LOCKED, MF_CHECKED);
 
 	{
 		::AppendMenu(menu, MF_STRING | MF_MENUBARBREAK, CommandID::WINDOW, _T("ドッキングを解除"));
@@ -263,6 +266,8 @@ void showPaneMenu(HWND hwndColony)
 
 		case CommandID::MOVE_TO_LEFT: pane->m_tab.moveTab(ht, ht - 1); break;
 		case CommandID::MOVE_TO_RIGHT: pane->m_tab.moveTab(ht, ht + 1); break;
+
+		case CommandID::IS_BORDER_LOCKED: pane->m_isBorderLocked = !pane->m_isBorderLocked; break;
 		}
 
 		if (id == CommandID::WINDOW)

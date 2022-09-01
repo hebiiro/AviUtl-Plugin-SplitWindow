@@ -134,6 +134,7 @@ HRESULT savePane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane)
 	setPrivateProfileLabel(paneElement, L"splitMode", pane->m_splitMode, g_splitModeLabel);
 	setPrivateProfileLabel(paneElement, L"origin", pane->m_origin, g_originLabel);
 	setPrivateProfileInt(paneElement, L"border", pane->m_border);
+	setPrivateProfileInt(paneElement, L"isBorderLocked", pane->m_isBorderLocked);
 	setPrivateProfileInt(paneElement, L"current", current);
 
 	int c = pane->m_tab.getTabCount();

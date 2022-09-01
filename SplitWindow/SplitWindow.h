@@ -31,6 +31,7 @@ struct CommandID
 	static const UINT ORIGIN_BOTTOM_RIGHT = 1011;
 	static const UINT MOVE_TO_LEFT = 1012;
 	static const UINT MOVE_TO_RIGHT = 1013;
+	static const UINT IS_BORDER_LOCKED = 1014;
 	static const UINT WINDOW = 2000;
 };
 

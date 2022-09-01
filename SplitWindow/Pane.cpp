@@ -621,31 +621,35 @@ PanePtr Pane::hitTestBorder(POINT point)
 	if (m_tab.getTabCount())
 		return 0; // ヒットしない。
 
-	switch (m_splitMode)
+	// このペインのボーダーがロックされていないなら
+	if (!m_isBorderLocked)
 	{
-	case SplitMode::vert:
+		switch (m_splitMode)
 		{
-			int border = absoluteX(m_border);
+		case SplitMode::vert:
+			{
+				int border = absoluteX(m_border);
 
-			// point がボーダーの範囲内なら
-			if (point.x >= border && point.x < border + g_borderWidth)
-				return shared_from_this(); // ヒットする。
+				// point がボーダーの範囲内なら
+				if (point.x >= border && point.x < border + g_borderWidth)
+					return shared_from_this(); // ヒットする。
 
-			break;
-		}
-	case SplitMode::horz:
-		{
-			int border = absoluteY(m_border);
+				break;
+			}
+		case SplitMode::horz:
+			{
+				int border = absoluteY(m_border);
 
-			// point がボーダーの範囲内なら
-			if (point.y >= border && point.y < border + g_borderWidth)
-				return shared_from_this(); // ヒットする。
+				// point がボーダーの範囲内なら
+				if (point.y >= border && point.y < border + g_borderWidth)
+					return shared_from_this(); // ヒットする。
 
-			break;
-		}
-	default:
-		{
-			return 0;
+				break;
+			}
+		default:
+			{
+				return 0;
+			}
 		}
 	}
 

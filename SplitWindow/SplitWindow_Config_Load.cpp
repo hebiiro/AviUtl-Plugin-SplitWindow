@@ -180,6 +180,7 @@ HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& paneElement, PanePtr pane)
 
 	getPrivateProfileLabel(paneElement, L"splitMode", pane->m_splitMode, g_splitModeLabel);
 	getPrivateProfileLabel(paneElement, L"origin", pane->m_origin, g_originLabel);
+	getPrivateProfileInt(paneElement, L"isBorderLocked", pane->m_isBorderLocked);
 	getPrivateProfileInt(paneElement, L"border", pane->m_border);
 	getPrivateProfileInt(paneElement, L"current", current);
 

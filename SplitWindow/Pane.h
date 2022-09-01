@@ -72,7 +72,8 @@ public:
 	RECT m_position = {};
 	int m_splitMode = SplitMode::none;
 	int m_origin = Origin::bottomRight;
-	int m_border = 0;
+	BOOL m_isBorderLocked = FALSE;
+	int m_border = 0; // ボーダーの位置。
 	int m_dragOffset = 0; // ドラッグ処理に使う。
 
 	TabControl m_tab;
