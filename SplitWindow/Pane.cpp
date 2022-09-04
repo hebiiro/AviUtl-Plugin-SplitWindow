@@ -622,7 +622,7 @@ PanePtr Pane::hitTestBorder(POINT point)
 		return 0; // ヒットしない。
 
 	// このペインのボーダーがロックされていないなら
-	if (!m_isBorderLocked)
+	if (!m_isBorderLocked || ::GetKeyState(VK_CONTROL) < 0)
 	{
 		switch (m_splitMode)
 		{
