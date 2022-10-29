@@ -191,6 +191,13 @@ void Shuttle::showTargetWindow()
 			// (WM_CLOSE は表示/非表示状態をトグルで切り替える)
 			::SendMessage(m_hwnd, WM_CLOSE, 0, 0);
 		}
+
+		// AviUtl がターゲットウィンドウを表示しなかった場合は
+		if (!::IsWindowVisible(m_hwnd))
+		{
+			// 手動でウィンドウを表示する。
+			::ShowWindow(m_hwnd, SW_SHOW);
+		}
 	}
 }
 

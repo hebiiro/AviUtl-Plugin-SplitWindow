@@ -272,6 +272,8 @@ void showPaneMenu(HWND hwndColony)
 
 		if (id == CommandID::WINDOW)
 		{
+			// ドッキングを解除する。
+
 			if (ht != -1)
 			{
 				Shuttle* shuttle = pane->m_tab.getShuttle(ht);
@@ -280,6 +282,8 @@ void showPaneMenu(HWND hwndColony)
 		}
 		else if (id > CommandID::WINDOW)
 		{
+			// ウィンドウをドッキングする。
+
 			TCHAR text[MAX_PATH] = {};
 			::GetMenuString(menu, id, text, MAX_PATH, MF_BYCOMMAND);
 			MY_TRACE_TSTR(text);

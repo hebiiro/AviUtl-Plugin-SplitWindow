@@ -249,6 +249,13 @@ HRESULT loadFloatShuttle(const MSXML2::IXMLDOMElementPtr& element)
 			// フローティングコンテナが表示状態なら
 			if (::IsWindowVisible(shuttle->m_floatContainer->m_hwnd))
 			{
+				// ドッキング状態なら
+				if (shuttle->m_pane)
+				{
+					// ドッキングを解除する。
+					shuttle->m_pane->removeShuttle(shuttle.get());
+				}
+
 				// ターゲットウィンドウを表示状態にする。
 				shuttle->showTargetWindow();
 			}
