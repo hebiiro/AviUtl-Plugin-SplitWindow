@@ -170,8 +170,9 @@ void showPaneMenu(HWND hwndColony)
 
 	{
 		::AppendMenu(menu, MF_STRING | MF_MENUBARBREAK, CommandID::WINDOW, _T("ドッキングを解除"));
-		if (!pane->m_tab.getTabCount())
-			::CheckMenuItem(menu, CommandID::WINDOW, MF_CHECKED);
+		// ドッキングしているシャトルが存在しない場合はこのメニューアイテムを無効化する。
+		if (pane->m_tab.getTabCount() == 0)
+			::EnableMenuItem(menu, CommandID::WINDOW, MF_DISABLED | MF_GRAYED);
 
 		// 表示状態のウィンドウをメニューに追加する。
 		int index = 1;
@@ -274,7 +275,7 @@ void showPaneMenu(HWND hwndColony)
 		{
 			// ドッキングを解除する。
 
-			if (ht != -1)
+			if (ht != -1 && pane->m_tab.getTabCount() > 0)
 			{
 				Shuttle* shuttle = pane->m_tab.getShuttle(ht);
 				pane->removeShuttle(shuttle);
