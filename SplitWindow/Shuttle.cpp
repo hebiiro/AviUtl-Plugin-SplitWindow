@@ -185,6 +185,11 @@ void Shuttle::showTargetWindow()
 			// AviUtl ウィンドウは普通に表示する。
 			::ShowWindow(m_hwnd, SW_SHOW);
 		}
+		else if (this == g_settingDialog.get())
+		{
+			// 設定ダイアログの表示は拡張編集に任せる。
+			return;
+		}
 		else
 		{
 			// ターゲットウィンドウを表示状態にする。
