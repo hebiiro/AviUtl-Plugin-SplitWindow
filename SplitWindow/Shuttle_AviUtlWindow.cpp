@@ -70,6 +70,39 @@ LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT mess
 
 			return container->onTargetWndProc(hwnd, message, wParam, lParam);
 		}
+	case WM_COMMAND:
+		{
+			if (wParam == 0x3EAE && lParam == 0x0)
+//			if (wParam == 0x3E98 && lParam == 0x0)
+			{
+				MY_TRACE(_T("再生開始\n"));
+
+				if (g_showPlayer)
+				{
+					// 再生開始時に再生ウィンドウを表示する。
+
+					auto it = g_shuttleMap.find(L"再生ウィンドウ");
+					if (it != g_shuttleMap.end())
+					{
+						Shuttle* shuttle = it->second.get();
+						Pane* pane = shuttle->m_pane;
+
+						if (pane)
+						{
+							int index = pane->m_tab.findTab(shuttle);
+
+							if (index != -1)
+							{
+								pane->m_tab.setCurrentIndex(index);
+								pane->m_tab.changeCurrent();
+							}
+						}
+					}
+				}
+			}
+
+			break;
+		}
 	}
 
 	return Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);

@@ -38,6 +38,7 @@ COLORREF g_inactiveCaptionColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
 COLORREF g_inactiveCaptionTextColor = RGB(0x00, 0x00, 0x00);
 BOOL g_useTheme = FALSE;
 BOOL g_forceScroll = FALSE;
+BOOL g_showPlayer = FALSE;
 
 //---------------------------------------------------------------------
 
