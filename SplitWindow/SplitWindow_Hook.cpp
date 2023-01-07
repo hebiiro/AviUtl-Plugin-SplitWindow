@@ -62,6 +62,15 @@ void addShuttleToMap(ShuttlePtr shuttle, LPCTSTR name, HWND hwnd)
 	shuttle->init(hwnd);
 }
 
+ShuttlePtr getShuttleFromMap(LPCTSTR name)
+{
+	auto it = g_shuttleMap.find(name);
+	if (it != g_shuttleMap.end())
+		return it->second;
+	else
+		return 0;
+}
+
 void hookExEdit()
 {
 	// 拡張編集が読み込まれたのでアドレスを取得する。
@@ -102,6 +111,20 @@ void hookExEdit()
 			true_vsthost_DialogBoxIndirectParamA = hookImportFunc(
 				vsthost, "DialogBoxIndirectParamA", hook_vsthost_DialogBoxIndirectParamA);
 			MY_TRACE_HEX(true_vsthost_DialogBoxIndirectParamA);
+		}
+	}
+
+	{
+		// color_palette.auf 内の ::CreateDialogParamA() をフックする。
+
+		HMODULE color_palette = ::GetModuleHandle(_T("color_palette.auf"));
+		MY_TRACE_HEX(color_palette);
+
+		if (color_palette)
+		{
+			true_color_palette_CreateDialogParamA = hookImportFunc(
+				color_palette, "CreateDialogParamA", hook_color_palette_CreateDialogParamA);
+			MY_TRACE_HEX(true_color_palette_CreateDialogParamA);
 		}
 	}
 }
@@ -525,6 +548,26 @@ IMPLEMENT_HOOK_PROC_NULL(INT_PTR, WINAPI, vsthost_DialogBoxIndirectParamA, (HINS
 	::DestroyWindow(dummy);
 
 	return result;
+}
+
+IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTANCE instance, LPCSTR templateName, HWND parent, DLGPROC dlgProc, LPARAM initParam))
+{
+	MY_TRACE(_T("color_palette_CreateDialogParamA()\n"));
+
+	HWND hwnd = true_color_palette_CreateDialogParamA(instance, templateName, parent, dlgProc, initParam);
+
+	TCHAR windowName[MAX_PATH] = {};
+	::GetWindowText(hwnd, windowName, MAX_PATH);
+	MY_TRACE_TSTR(windowName);
+
+	if (::lstrcmpiA(windowName, "マイパレット") == 0)
+	{
+		// マイパレットダイアログのコンテナの初期化。
+		ShuttlePtr shuttle(new Shuttle());
+		addShuttleToMap(shuttle, windowName, hwnd);
+	}
+
+	return hwnd;
 }
 
 COLORREF WINAPI Dropper_GetPixel(HDC _dc, int x, int y)
