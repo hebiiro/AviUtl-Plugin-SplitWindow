@@ -3,19 +3,9 @@
 
 //---------------------------------------------------------------------
 
-WNDPROC getClassProc(LPCWSTR className)
-{
-	WNDCLASSEXW wc = { sizeof(wc) };
-	::GetClassInfoExW(0, className, &wc);
-	return wc.lpfnWndProc;
-}
-
 void initHook()
 {
 	MY_TRACE(_T("initHook()\n"));
-
-	true_ComboBoxProc = getClassProc(WC_COMBOBOXW);
-	true_TrackBarProc = getClassProc(TRACKBAR_CLASSW);
 
 	HMODULE user32 = ::GetModuleHandle(_T("user32.dll"));
 	true_CreateWindowExA = (Type_CreateWindowExA)::GetProcAddress(user32, "CreateWindowExA");
@@ -23,8 +13,6 @@ void initHook()
 	DetourTransactionBegin();
 	DetourUpdateThread(::GetCurrentThread());
 
-	ATTACH_HOOK_PROC(ComboBoxProc);
-	ATTACH_HOOK_PROC(TrackBarProc);
 	ATTACH_HOOK_PROC(CreateWindowExA);
 	ATTACH_HOOK_PROC(MoveWindow);
 	ATTACH_HOOK_PROC(SetWindowPos);
@@ -48,11 +36,15 @@ void initHook()
 	{
 		MY_TRACE(_T("API フックに失敗しました\n"));
 	}
+
+	::SetWindowsHookEx(WH_GETMESSAGE, gmHookProc, g_instance, ::GetCurrentThreadId());
 }
 
 void termHook()
 {
 	MY_TRACE(_T("termHook()\n"));
+
+	::UnhookWindowsHookEx(g_gmHook), g_gmHook = 0;
 }
 
 void hookExEdit()
@@ -114,37 +106,6 @@ void hookExEdit()
 }
 
 //---------------------------------------------------------------------
-
-IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, ComboBoxProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))
-{
-	switch (message)
-	{
-	case WM_MOUSEWHEEL:
-		{
-			// スクロールを優先する場合はコンボボックスのウィンドウ関数は呼ばない。
-			if (g_forceScroll)
-				return ::DefWindowProcW(hwnd, message, wParam, lParam);
-
-			break;
-		}
-	}
-
-	return true_ComboBoxProc(hwnd, message, wParam, lParam);
-}
-
-IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, TrackBarProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))
-{
-	switch (message)
-	{
-	case WM_MOUSEWHEEL:
-		{
-			// トラックバーのウィンドウ関数は呼ばない。
-			return ::DefWindowProcW(hwnd, message, wParam, lParam);
-		}
-	}
-
-	return true_TrackBarProc(hwnd, message, wParam, lParam);
-}
 
 IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR className, LPCSTR windowName, DWORD style, int x, int y, int w, int h, HWND parent, HMENU menu, HINSTANCE instance, LPVOID param))
 {
@@ -611,6 +572,46 @@ HWND WINAPI KeyboardHook_GetActiveWindow()
 	}
 
 	return activeWindow;
+}
+
+LRESULT CALLBACK gmHookProc(int code, WPARAM wParam, LPARAM lParam)
+{
+	if (code == HC_ACTION && wParam == PM_REMOVE)
+	{
+		MSG* msg = (MSG*)lParam;
+
+		switch (msg->message)
+		{
+		case WM_MOUSEWHEEL:
+			{
+				// クラス名を取得する。
+				TCHAR className[MAX_PATH] = {};
+				::GetClassName(msg->hwnd, className, MAX_PATH);
+				MY_TRACE_TSTR(className);
+
+				// コンボボックスの場合
+				if (::StrCmpI(className, WC_COMBOBOX) == 0)
+				{
+					// スクロールを優先するように指定されているなら
+					if (g_forceScroll)
+					{
+						// 親ウィンドウでマウスホイールメッセージを処理する。
+						msg->hwnd = ::GetParent(msg->hwnd);
+					}
+				}
+				// トラックバーの場合
+				else if (::StrCmpI(className, TRACKBAR_CLASS) == 0)
+				{
+					// 親ウィンドウでマウスホイールメッセージを処理する。
+					msg->hwnd = ::GetParent(msg->hwnd);
+				}
+
+				break;
+			}
+		}
+	}
+
+	return ::CallNextHookEx(g_gmHook, code, wParam, lParam);
 }
 
 //---------------------------------------------------------------------

@@ -16,6 +16,7 @@ HINSTANCE g_instance = 0;
 HWND g_hub = 0;
 HTHEME g_theme = 0;
 HMENU g_colonyMenu = 0;
+HHOOK g_gmHook = 0;
 
 AviUtlWindowPtr g_aviutlWindow(new AviUtlWindow());
 ExEditWindowPtr g_exeditWindow(new ExEditWindow());
