@@ -8,7 +8,9 @@ struct Label { LPCWSTR label; int value; };
 
 #include "Pane.h"
 #include "Shuttle.h"
+#include "ShuttleManager.h"
 #include "Container.h"
+#include "ColonyManager.h"
 
 //---------------------------------------------------------------------
 
@@ -19,11 +21,13 @@ struct WindowMessage
 
 struct CommandID
 {
+	static const UINT COLONY_BEGIN = 100;
+	static const UINT COLONY_END = 200;
 	static const UINT SHOW_CONFIG_DIALOG = 1000;
 	static const UINT IMPORT_LAYOUT = 1001;
 	static const UINT EXPORT_LAYOUT = 1002;
 	static const UINT CREATE_COLONY = 1003;
-
+	
 	static const UINT SPLIT_MODE_NONE = 1000;
 	static const UINT SPLIT_MODE_VERT = 1001;
 	static const UINT SPLIT_MODE_HORZ = 1002;
@@ -32,6 +36,7 @@ struct CommandID
 	static const UINT MOVE_TO_LEFT = 1012;
 	static const UINT MOVE_TO_RIGHT = 1013;
 	static const UINT IS_BORDER_LOCKED = 1014;
+	static const UINT RENAME_COLONY = 1015;
 	static const UINT WINDOW = 2000;
 };
 
@@ -51,21 +56,18 @@ const Label g_tabModeLabel[] =
 
 //---------------------------------------------------------------------
 
-typedef std::set<HWND> HWNDSet;
-
-//---------------------------------------------------------------------
-
 extern AviUtlInternal g_auin;
 extern HINSTANCE g_instance;
 extern HWND g_hub;
 extern HTHEME g_theme;
+extern HMENU g_colonyMenu;
 
 extern AviUtlWindowPtr g_aviutlWindow;
 extern ExEditWindowPtr g_exeditWindow;
 extern SettingDialogPtr g_settingDialog;
 
-extern HWNDSet g_colonySet;
-extern ShuttleMap g_shuttleMap;
+extern ColonyManager g_colonyManager;
+extern ShuttleManager g_shuttleManager;
 extern PanePtr g_hotBorderPane;
 
 extern int g_borderWidth;
@@ -86,15 +88,12 @@ extern BOOL g_showPlayer;
 
 //---------------------------------------------------------------------
 
-PanePtr getRootPane(HWND hwndColony);
-void calcLayout(HWND hwndColony);
-void calcAllLayout();
 BOOL showTargetMenu(HWND hwndColony, POINT point);
 void showPaneMenu(HWND hwndColony);
 void fillBackground(HDC dc, LPCRECT rc);
 HWND createPopupWindow(HWND parent);
 
-HWND createColony();
+HWND createColony(LPCTSTR name);
 LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HWND createHub();
@@ -102,6 +101,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HRESULT loadConfig();
 HRESULT loadConfig(LPCWSTR fileName, BOOL _import);
+HRESULT preLoadColony(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT loadHub(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT loadColony(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane);

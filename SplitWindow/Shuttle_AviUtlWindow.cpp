@@ -81,15 +81,14 @@ LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT mess
 				{
 					// 再生開始時に再生ウィンドウを表示する。
 
-					auto it = g_shuttleMap.find(L"再生ウィンドウ");
-					if (it != g_shuttleMap.end())
+					ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"再生ウィンドウ");
+					if (shuttle)
 					{
-						Shuttle* shuttle = it->second.get();
 						Pane* pane = shuttle->m_pane;
 
 						if (pane)
 						{
-							int index = pane->m_tab.findTab(shuttle);
+							int index = pane->m_tab.findTab(shuttle.get());
 
 							if (index != -1)
 							{

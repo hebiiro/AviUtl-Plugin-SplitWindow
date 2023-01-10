@@ -20,7 +20,6 @@
     <ClInclude Include="..\..\Common\Dialog.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="ConfigDialog.h" />
     <ClInclude Include="..\..\Common\WinUtility.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -39,12 +38,23 @@
     <ClInclude Include="Shuttle.h">
       <Filter>Element</Filter>
     </ClInclude>
+    <ClInclude Include="ShuttleManager.h">
+      <Filter>Element</Filter>
+    </ClInclude>
+    <ClInclude Include="ColonyManager.h">
+      <Filter>Element</Filter>
+    </ClInclude>
+    <ClInclude Include="RenameColonyDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigDialog.h">
+      <Filter>Dialog</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SplitWindow.cpp" />
     <ClCompile Include="SplitWindow_Config_Load.cpp" />
     <ClCompile Include="SplitWindow_Config_Save.cpp" />
-    <ClCompile Include="ConfigDialog.cpp" />
     <ClCompile Include="SplitWindow_Hook.cpp" />
     <ClCompile Include="Pane.cpp">
       <Filter>Element</Filter>
@@ -75,6 +85,18 @@
     <ClCompile Include="Shuttle_SettingDialog.cpp">
       <Filter>Element</Filter>
     </ClCompile>
+    <ClCompile Include="ShuttleManager.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="ColonyManager.cpp">
+      <Filter>Element</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="RenameColonyDialog.cpp">
+      <Filter>Dialog</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -85,6 +107,9 @@
     </Filter>
     <Filter Include="Element">
       <UniqueIdentifier>{ed06563f-ce2e-4e41-9e69-3d7438c8a450}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dialog">
+      <UniqueIdentifier>{c3c361e5-d578-409c-bedc-eb9f09607907}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

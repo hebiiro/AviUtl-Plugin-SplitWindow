@@ -67,6 +67,9 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 			getPrivateProfileBool(element, L"showPlayer", g_showPlayer);
 		}
 
+		// 事前に <colony> を読み込む。
+		preLoadColony(element);
+
 		// <hub> を読み込む。
 		loadHub(element);
 
@@ -88,6 +91,32 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 	}
 }
 
+// 事前に <colony> を読み込む。
+HRESULT preLoadColony(const MSXML2::IXMLDOMElementPtr& element)
+{
+	MY_TRACE(_T("preLoadColony()\n"));
+
+	// 一旦すべてのコロニーを削除する。
+	g_colonyManager.clear();
+
+	// <colony> を読み込む。
+	MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"colony");
+	int c = nodeList->length;
+	for (int i = 0; i < c; i++)
+	{
+		MSXML2::IXMLDOMElementPtr colonyElement = nodeList->item[i];
+
+		// 名前を読み込む。
+		_bstr_t name = L"";
+		getPrivateProfileName(colonyElement, L"name", name);
+
+		// コロニーを作成する。
+		HWND colony = createColony(name);
+	}
+
+	return S_OK;
+}
+
 // <hub> を読み込む。
 HRESULT loadHub(const MSXML2::IXMLDOMElementPtr& element)
 {
@@ -101,7 +130,7 @@ HRESULT loadHub(const MSXML2::IXMLDOMElementPtr& element)
 		MSXML2::IXMLDOMElementPtr hubElement = nodeList->item[i];
 
 		HWND hwndHub = g_hub;
-		PanePtr root = getRootPane(hwndHub);
+		PanePtr root = g_colonyManager.getRootPane(hwndHub);
 
 		// 一旦すべてのペインをリセットする。
 		root->resetPane();
@@ -128,9 +157,6 @@ HRESULT loadColony(const MSXML2::IXMLDOMElementPtr& element)
 {
 	MY_TRACE(_T("loadColony()\n"));
 
-	// 一旦すべてのコロニーを削除する。
-	g_colonySet.clear();
-
 	// <colony> を読み込む。
 	MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"colony");
 	int c = nodeList->length;
@@ -138,23 +164,18 @@ HRESULT loadColony(const MSXML2::IXMLDOMElementPtr& element)
 	{
 		MSXML2::IXMLDOMElementPtr colonyElement = nodeList->item[i];
 
-		HWND hwndColony = createColony();
-		PanePtr root = getRootPane(hwndColony);
-
-		// ウィンドウテキストを読み込む。
+		// 名前を読み込む。
 		_bstr_t name = L"";
 		getPrivateProfileName(colonyElement, L"name", name);
-		::SetWindowText(hwndColony, name);
 
-		// ウィンドウ位置を読み込む。
-		getPrivateProfileWindow(colonyElement, L"placement", hwndColony);
+		// コロニーを取得する。
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(name);
+		if (!shuttle) continue;
 
-		// コロニーが非表示なら
-		if (!::IsWindowVisible(hwndColony))
-		{
-			// 強制的に表示状態にする。
-			::ShowWindow(hwndColony, SW_SHOWNA);
-		}
+		// ルートペインを取得する。
+		HWND colony = shuttle->m_hwnd;
+		PanePtr root = g_colonyManager.getRootPane(colony);
+		if (!root) continue;
 
 		// <pane> を読み込む。
 		MSXML2::IXMLDOMNodeListPtr nodeList = colonyElement->selectNodes(L"pane");
@@ -202,9 +223,9 @@ HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& paneElement, PanePtr pane)
 			getPrivateProfileName(dockShuttleElement, L"name", name);
 			MY_TRACE_WSTR((LPCWSTR)name);
 
-			auto it = g_shuttleMap.find(name);
-			if (it != g_shuttleMap.end())
-				pane->addShuttle(it->second.get());
+			ShuttlePtr shuttle = g_shuttleManager.getShuttle(name);
+			if (shuttle)
+				pane->addShuttle(shuttle.get());
 		}
 	}
 
@@ -240,11 +261,9 @@ HRESULT loadFloatShuttle(const MSXML2::IXMLDOMElementPtr& element)
 		_bstr_t name = L"";
 		getPrivateProfileName(floatShuttleElement, L"name", name);
 
-		auto it = g_shuttleMap.find(name);
-		if (it != g_shuttleMap.end())
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(name);
+		if (shuttle)
 		{
-			ShuttlePtr shuttle = it->second;
-
 			getPrivateProfileWindow(floatShuttleElement, L"placement", shuttle->m_floatContainer->m_hwnd);
 
 			// フローティングコンテナが表示状態なら

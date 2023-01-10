@@ -23,6 +23,7 @@ Container::Container(Shuttle* shuttle, DWORD style)
 
 Container::~Container()
 {
+	::DestroyWindow(m_hwnd), m_hwnd = 0;
 }
 
 void Container::onResizeDockContainer(LPCRECT rc)
@@ -156,6 +157,11 @@ Container* Container::getContainer(HWND hwndContainer)
 void Container::setContainer(HWND hwndContainer, Container* container)
 {
 	::SetProp(hwndContainer, _T("SplitWindow.Container"), container);
+}
+
+void Container::removeContainer(HWND hwndContainer)
+{
+	::RemoveProp(hwndContainer, _T("SplitWindow.Container"));
 }
 
 //---------------------------------------------------------------------

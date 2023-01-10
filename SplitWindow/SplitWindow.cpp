@@ -15,13 +15,14 @@ AviUtlInternal g_auin;
 HINSTANCE g_instance = 0;
 HWND g_hub = 0;
 HTHEME g_theme = 0;
+HMENU g_colonyMenu = 0;
 
 AviUtlWindowPtr g_aviutlWindow(new AviUtlWindow());
 ExEditWindowPtr g_exeditWindow(new ExEditWindow());
 SettingDialogPtr g_settingDialog(new SettingDialog());
 
-HWNDSet g_colonySet;
-ShuttleMap g_shuttleMap;
+ColonyManager g_colonyManager;
+ShuttleManager g_shuttleManager;
 PanePtr g_hotBorderPane;
 
 int g_borderWidth = 8;
@@ -41,33 +42,6 @@ BOOL g_forceScroll = FALSE;
 BOOL g_showPlayer = FALSE;
 
 //---------------------------------------------------------------------
-
-PanePtr getRootPane(HWND hwndColony)
-{
-	return *(PanePtr*)::GetProp(hwndColony, _T("SplitWindow.RootPane"));
-}
-
-// ペインのレイアウトを再帰的に再計算する。
-void calcLayout(HWND hwndColony)
-{
-	MY_TRACE(_T("calcLayout(0x%08X)\n"), hwndColony);
-
-	RECT rc; ::GetClientRect(hwndColony, &rc);
-	PanePtr root = getRootPane(hwndColony);
-	root->recalcLayout(&rc);
-}
-
-void calcAllLayout()
-{
-	calcLayout(g_hub);
-	::InvalidateRect(g_hub, 0, FALSE);
-
-	for (auto hwndColony : g_colonySet)
-	{
-		calcLayout(hwndColony);
-		::InvalidateRect(hwndColony, 0, FALSE);
-	}
-}
 
 // メニューのコピーを作成する。
 void copyMenu(HMENU srcMenu, HMENU dstMenu)
@@ -97,7 +71,7 @@ void copyMenu(HMENU srcMenu, HMENU dstMenu)
 // ターゲットのメニューを表示する。
 BOOL showTargetMenu(HWND hwndColony, POINT point)
 {
-	PanePtr root = getRootPane(hwndColony);
+	PanePtr root = g_colonyManager.getRootPane(hwndColony);
 
 	// ペインを取得する。
 	PanePtr pane = root->hitTestPane(point);
@@ -138,7 +112,7 @@ BOOL showTargetMenu(HWND hwndColony, POINT point)
 // ペインの設定をするメニューを表示する。
 void showPaneMenu(HWND hwndColony)
 {
-	PanePtr root = getRootPane(hwndColony);
+	PanePtr root = g_colonyManager.getRootPane(hwndColony);
 
 	POINT cursorPos; ::GetCursorPos(&cursorPos);
 	POINT point = cursorPos;
@@ -147,8 +121,20 @@ void showPaneMenu(HWND hwndColony)
 	PanePtr pane = root->hitTestPane(point);
 	if (!pane) return;
 
+	POINT point2 = point;
+	::MapWindowPoints(hwndColony, pane->m_owner, &point2, 1);
+	BOOL inCaption = pane->hitTestCaption(point2);
+
 	int c = pane->m_tab.getTabCount();
-	int ht = (c <= 1) ? 0 : pane->m_tab.hitTest(point);
+	int ht = pane->m_tab.hitTest(point);
+	Shuttle* shuttle = 0;
+	if (ht != -1)
+		shuttle = pane->m_tab.getShuttle(ht);
+	else if (inCaption)
+		shuttle = pane->m_tab.getShuttle(pane->m_tab.getCurrentIndex());
+	HWND colonyInShuttle = 0;
+	if (shuttle && g_colonyManager.getRootPane(shuttle->m_hwnd))
+		colonyInShuttle = shuttle->m_hwnd;
 
 	HMENU menu = ::CreatePopupMenu();
 
@@ -168,28 +154,41 @@ void showPaneMenu(HWND hwndColony)
 	::AppendMenu(menu, MF_STRING, CommandID::IS_BORDER_LOCKED, _T("ボーダーをロック"));
 	if (pane->m_isBorderLocked)
 		::CheckMenuItem(menu, CommandID::IS_BORDER_LOCKED, MF_CHECKED);
+	::AppendMenu(menu, MF_SEPARATOR, -1, 0);
+	::AppendMenu(menu, MF_STRING, CommandID::RENAME_COLONY, _T("名前を変更"));
+	if (!colonyInShuttle)
+		::EnableMenuItem(menu, CommandID::RENAME_COLONY, MF_GRAYED | MF_DISABLED);
 
 	{
 		::AppendMenu(menu, MF_STRING | MF_MENUBARBREAK, CommandID::WINDOW, _T("ドッキングを解除"));
 		// ドッキングしているシャトルが存在しない場合はこのメニューアイテムを無効化する。
-		if (pane->m_tab.getTabCount() == 0)
+		if (c == 0)
 			::EnableMenuItem(menu, CommandID::WINDOW, MF_DISABLED | MF_GRAYED);
 
 		// 表示状態のウィンドウをメニューに追加する。
 		int index = 1;
-		for (auto& x : g_shuttleMap)
+		for (auto& x : g_shuttleManager.m_map)
 		{
+			ShuttlePtr shuttle = x.second;
+
 			// 非表示状態のウィンドウはスキップする。
-			if (!::IsWindowVisible(x.second->m_hwnd)) continue;
+			if (!::IsWindowVisible(shuttle->m_hwnd)) continue;
 
 			// メニューアイテムを追加する。
 			::AppendMenu(menu, MF_STRING, CommandID::WINDOW + index, x.first);
 
 			// ウィンドウのタブが存在するなら
-			if (pane->m_tab.findTab(x.second.get()) != -1)
+			if (pane->m_tab.findTab(shuttle.get()) != -1)
 			{
 				// メニューアイテムにチェックを入れる。
 				::CheckMenuItem(menu, CommandID::WINDOW + index, MF_CHECKED);
+			}
+
+			// ドッキング不可能なら
+			if (!g_colonyManager.canDocking(hwndColony, shuttle->m_hwnd))
+			{
+				// メニューアイテムを無効にする。
+				::EnableMenuItem(menu, CommandID::WINDOW + index, MF_DISABLED | MF_GRAYED);
 			}
 
 			// カウンタをインクリメントする。
@@ -198,7 +197,7 @@ void showPaneMenu(HWND hwndColony)
 
 		// 非表示状態のウィンドウをメニューに追加する。
 		int i = 0;
-		for (auto& x : g_shuttleMap)
+		for (auto& x : g_shuttleManager.m_map)
 		{
 			ShuttlePtr shuttle = x.second;
 
@@ -232,6 +231,13 @@ void showPaneMenu(HWND hwndColony)
 			{
 				// メニューアイテムにチェックを入れる。
 				::CheckMenuItem(menu, CommandID::WINDOW + index, MF_CHECKED);
+			}
+
+			// ドッキング不可能なら
+			if (!g_colonyManager.canDocking(hwndColony, shuttle->m_hwnd))
+			{
+				// メニューアイテムを無効にする。
+				::EnableMenuItem(menu, CommandID::WINDOW + index, MF_DISABLED | MF_GRAYED);
 			}
 
 			// カウンタをインクリメントする。
@@ -270,15 +276,22 @@ void showPaneMenu(HWND hwndColony)
 		case CommandID::MOVE_TO_RIGHT: pane->m_tab.moveTab(ht, ht + 1); break;
 
 		case CommandID::IS_BORDER_LOCKED: pane->m_isBorderLocked = !pane->m_isBorderLocked; break;
+
+		case CommandID::RENAME_COLONY: g_shuttleManager.renameShuttle(hwndColony, shuttle); break;
 		}
 
 		if (id == CommandID::WINDOW)
 		{
 			// ドッキングを解除する。
 
-			if (ht != -1 && pane->m_tab.getTabCount() > 0)
+			int index = ht;
+
+			if (index == -1)
+				index = pane->m_tab.getCurrentIndex();
+
+			if (index != -1)
 			{
-				Shuttle* shuttle = pane->m_tab.getShuttle(ht);
+				Shuttle* shuttle = pane->m_tab.getShuttle(index);
 				pane->removeShuttle(shuttle);
 			}
 		}
@@ -290,13 +303,12 @@ void showPaneMenu(HWND hwndColony)
 			::GetMenuString(menu, id, text, MAX_PATH, MF_BYCOMMAND);
 			MY_TRACE_TSTR(text);
 
-			auto it = g_shuttleMap.find(text);
-			if (it != g_shuttleMap.end())
+			ShuttlePtr shuttle = g_shuttleManager.getShuttle(text);
+			if (shuttle && g_colonyManager.canDocking(hwndColony, shuttle->m_hwnd))
 			{
-				Shuttle* shuttle = it->second.get();
 				Pane* oldPane = shuttle->m_pane;
 
-				int index = pane->addShuttle(shuttle, ht);
+				int index = pane->addShuttle(shuttle.get(), ht);
 				if (index != -1)
 				{
 					if (oldPane)

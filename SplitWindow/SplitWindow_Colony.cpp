@@ -4,9 +4,9 @@
 //---------------------------------------------------------------------
 
 // 他のウィンドウの土台となるベースウィンドウを作成する。
-HWND createColony()
+HWND createColony(LPCTSTR name)
 {
-	MY_TRACE(_T("createColony()\n"));
+	MY_TRACE(_T("createColony(%s)\n"), name);
 
 	WNDCLASS wc = {};
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -16,14 +16,37 @@ HWND createColony()
 	wc.lpszClassName = _T("SplitWindow.Colony");
 	::RegisterClass(&wc);
 
+	if (!name)
+	{
+		for (int i = 0; TRUE; i++)
+		{
+			static TCHAR windowName[MAX_PATH] = {};
+			::StringCbPrintf(windowName, sizeof(windowName), _T("Colony.%d"), i);
+			MY_TRACE_TSTR(windowName);
+
+			if (g_shuttleManager.getShuttle(windowName))
+				continue;
+
+			name = windowName;
+
+			break;
+		}
+	}
+
 	HWND hwnd = ::CreateWindowEx(
 		0,
 		_T("SplitWindow.Colony"),
-		_T("SplitWindow.Colony"),
+		name,
 		WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_THICKFRAME |
 		WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		g_hub, 0, g_instance, 0);
+
+	{
+		// コロニーをシャトルの中に入れる。
+		ShuttlePtr shuttle(new Shuttle());
+		g_shuttleManager.addShuttle(shuttle, name, hwnd);
+	}
 
 	return hwnd;
 }
@@ -63,11 +86,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		{
 			MY_TRACE(_T("colonyProc(WM_CREATE)\n"));
 
-			// ルートペインを作成する。
-			::SetProp(hwnd, _T("SplitWindow.RootPane"), (HANDLE)new PanePtr(new Pane(hwnd)));
-
-			// コレクションに追加する。
-			g_colonySet.insert(hwnd);
+			g_colonyManager.insert(hwnd);
 
 			break;
 		}
@@ -75,23 +94,44 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		{
 			MY_TRACE(_T("colonyProc(WM_DESTROY)\n"));
 
-			// コレクションから削除する。
-			g_colonySet.erase(hwnd);
+			g_colonyManager.erase(hwnd);
 
-			// ルートペインを削除する。
-			PanePtr* root = (PanePtr*)::RemoveProp(hwnd, _T("SplitWindow.RootPane"));
+			break;
+		}
+	case WM_CLOSE:
+		{
+			MY_TRACE(_T("colonyProc(WM_CLOSE)\n"));
 
-			// ドッキング中のウィンドウが削除されないようにルートペインをリセットする。
-			if (hwnd != g_hub)
-				root->get()->resetPane();
+			if (::GetKeyState(VK_SHIFT) < 0)
+			{
+				// Shift キーが押されている場合はコロニーを削除する。
 
-			delete root;
+				if (IDYES != ::MessageBox(hwnd, _T("コロニーを削除しますか？"), _T("SplitWindow"), MB_YESNO))
+					return 0;
+			}
+			else
+			{
+				// コロニーの表示状態を切り替える。
+				// ::ShowWindow(hwnd, SW_SHOW) ではなぜか WM_SHOWWINDOW が発生しないので、
+				// 親ウィンドウの表示状態を直接切り替える。
 
+				if (::IsWindowVisible(hwnd))
+				{
+					::ShowWindow(::GetParent(hwnd), SW_HIDE);
+				}
+				else
+				{
+					::ShowWindow(::GetParent(hwnd), SW_SHOW);
+				}
+
+				return 0;
+			}
+		
 			break;
 		}
 	case WM_SIZE:
 		{
-			calcLayout(hwnd);
+			g_colonyManager.calcLayout(hwnd);
 
 			break;
 		}
@@ -109,7 +149,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 			{
 				HDC dc = mdc;
 
-				PanePtr root = getRootPane(hwnd);
+				PanePtr root = g_colonyManager.getRootPane(hwnd);
 
 				{
 					// 背景を塗りつぶす。
@@ -176,7 +216,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		{
 			if (hwnd == (HWND)wParam)
 			{
-				PanePtr root = getRootPane(hwnd);
+				PanePtr root = g_colonyManager.getRootPane(hwnd);
 
 				POINT point; ::GetCursorPos(&point);
 				::ScreenToClient(hwnd, &point);
@@ -213,7 +253,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 			if (showTargetMenu(hwnd, point))
 				break;
 
-			PanePtr root = getRootPane(hwnd);
+			PanePtr root = g_colonyManager.getRootPane(hwnd);
 
 			// マウス座標にあるボーダーを取得する。
 			g_hotBorderPane = root->hitTestBorder(point);
@@ -306,7 +346,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 			}
 			else
 			{
-				PanePtr root = getRootPane(hwnd);
+				PanePtr root = g_colonyManager.getRootPane(hwnd);
 
 				// マウス座標にあるボーダーを取得する。
 				PanePtr hotBorderPane = root->hitTestBorder(point);

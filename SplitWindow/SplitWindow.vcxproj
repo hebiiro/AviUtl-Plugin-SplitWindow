@@ -190,21 +190,27 @@
     <ClInclude Include="..\..\Common\Profile.h" />
     <ClInclude Include="..\..\Common\Tracer.h" />
     <ClInclude Include="..\..\Common\WinUtility.h" />
+    <ClInclude Include="ColonyManager.h" />
     <ClInclude Include="ConfigDialog.h" />
     <ClInclude Include="Container.h" />
     <ClInclude Include="Pane.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="RenameColonyDialog.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shuttle.h" />
+    <ClInclude Include="ShuttleManager.h" />
     <ClInclude Include="SplitWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ColonyManager.cpp" />
     <ClCompile Include="ConfigDialog.cpp" />
     <ClCompile Include="Container.cpp" />
     <ClCompile Include="Container_Scroll.cpp" />
     <ClCompile Include="Container_Spread.cpp" />
     <ClCompile Include="Pane.cpp" />
+    <ClCompile Include="RenameColonyDialog.cpp" />
     <ClCompile Include="Shuttle.cpp" />
+    <ClCompile Include="ShuttleManager.cpp" />
     <ClCompile Include="Shuttle_AviUtlWindow.cpp" />
     <ClCompile Include="Shuttle_ExEditWindow.cpp" />
     <ClCompile Include="Shuttle_SettingDialog.cpp" />

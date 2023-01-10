@@ -13,6 +13,15 @@ public:
 	Pane* m_pane = 0;
 	_bstr_t m_name = L"";
 
+	virtual ~Shuttle()
+	{
+		MY_TRACE(_T("Shuttle::~Shuttle(), 0x%08X, %ws\n"), m_hwnd, (BSTR)m_name);
+
+		// このままだとコンテナが削除されるときターゲットウィンドウも削除されてしまうので、
+		// ターゲットウィンドウの親ウィンドウを 0 にしておく。
+		::SetParent(m_hwnd, 0);
+	}
+
 	virtual void init(HWND hwnd);
 	virtual Container* onCreateDockContainer();
 	virtual Container* onCreateFloatContainer();
@@ -22,7 +31,7 @@ public:
 	virtual LRESULT onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	void showTargetWindow();
-	void dockWindow(LPCRECT rc);
+	void dockWindow();
 	void floatWindow();
 
 	virtual void resizeDockContainer(LPCRECT rc);

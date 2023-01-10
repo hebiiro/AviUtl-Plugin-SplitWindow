@@ -196,9 +196,8 @@ int Pane::addShuttle(Shuttle* shuttle, int index)
 	int result = m_tab.addTab(shuttle, text, index);
 
 	// ウィンドウをドッキング状態にする。
-	RECT rcDock = getDockRect();
 	shuttle->m_pane = this;
-	shuttle->dockWindow(&rcDock);
+	shuttle->dockWindow();
 
 	return result;
 }
@@ -578,6 +577,13 @@ void Pane::recalcLayout(LPCRECT rc)
 			break;
 		}
 	}
+}
+
+BOOL Pane::hitTestCaption(POINT point)
+{
+	RECT rc = getCaptionRect();
+
+	return ::PtInRect(&rc, point);
 }
 
 PanePtr Pane::hitTestPane(POINT point)

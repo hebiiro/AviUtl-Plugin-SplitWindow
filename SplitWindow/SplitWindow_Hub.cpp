@@ -59,7 +59,7 @@ BOOL importLayout(HWND hwnd)
 	loadConfig(fileName, TRUE);
 
 	// レイアウトを再計算する。
-	calcAllLayout();
+	g_colonyManager.calcAllLayout();
 
 	// シングルウィンドウが非表示なら表示する。
 	if (!::IsWindowVisible(hwnd))
@@ -155,6 +155,12 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			MY_TRACE(_T("hubProc(WM_SYSCOMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
+			if (wParam >= CommandID::COLONY_BEGIN &&
+				wParam < CommandID::COLONY_END)
+			{
+				g_colonyManager.executeColonyMenu(wParam);
+			}
+
 			switch (wParam)
 			{
 			case CommandID::SHOW_CONFIG_DIALOG:
@@ -181,7 +187,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case CommandID::CREATE_COLONY:
 				{
 					// コロニーを新規作成する。
-					createColony();
+					createColony(0);
 
 					break;
 				}
@@ -196,6 +202,13 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			break;
 		}
+	case WM_INITMENUPOPUP:
+		{
+			if ((HMENU)wParam == g_colonyMenu)
+				g_colonyManager.updateColonyMenu();
+
+			break;
+		}
 	case WM_CREATE:
 		{
 			MY_TRACE(_T("hubProc(WM_CREATE)\n"));
@@ -203,12 +216,16 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			g_theme = ::OpenThemeData(hwnd, VSCLASS_WINDOW);
 			MY_TRACE_HEX(g_theme);
 
+			g_colonyMenu = ::CreatePopupMenu();
+			MY_TRACE_HEX(g_colonyMenu);
+
 			HMENU menu = ::GetSystemMenu(hwnd, FALSE);
 			::InsertMenu(menu, 0, MF_BYPOSITION | MF_STRING, CommandID::CREATE_COLONY, _T("コロニーを新規作成"));
 			::InsertMenu(menu, 1, MF_BYPOSITION | MF_STRING, CommandID::IMPORT_LAYOUT, _T("レイアウトのインポート"));
 			::InsertMenu(menu, 2, MF_BYPOSITION | MF_STRING, CommandID::EXPORT_LAYOUT, _T("レイアウトのエクスポート"));
 			::InsertMenu(menu, 3, MF_BYPOSITION | MF_STRING, CommandID::SHOW_CONFIG_DIALOG, _T("SplitWindowの設定"));
-			::InsertMenu(menu, 4, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
+			::InsertMenu(menu, 4, MF_BYPOSITION | MF_POPUP, (UINT)g_colonyMenu, _T("コロニー"));
+			::InsertMenu(menu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 			break;
 		}
@@ -216,6 +233,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			MY_TRACE(_T("hubProc(WM_DESTROY)\n"));
 
+			::DestroyMenu(g_colonyMenu), g_colonyMenu = 0;
 			::CloseThemeData(g_theme), g_theme = 0;
 
 			break;
@@ -230,7 +248,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				::ShowWindow(hwnd, SW_SHOW);
 
 			// 最初のレイアウト計算。
-			calcAllLayout();
+			g_colonyManager.calcAllLayout();
 
 			// シングルウィンドウをフォアグラウンドにする。
 			::SetForegroundWindow(hwnd);

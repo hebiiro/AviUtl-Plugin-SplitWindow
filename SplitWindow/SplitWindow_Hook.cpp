@@ -55,22 +55,6 @@ void termHook()
 	MY_TRACE(_T("termHook()\n"));
 }
 
-void addShuttleToMap(ShuttlePtr shuttle, LPCTSTR name, HWND hwnd)
-{
-	g_shuttleMap[name] = shuttle;
-	shuttle->m_name = name;
-	shuttle->init(hwnd);
-}
-
-ShuttlePtr getShuttleFromMap(LPCTSTR name)
-{
-	auto it = g_shuttleMap.find(name);
-	if (it != g_shuttleMap.end())
-		return it->second;
-	else
-		return 0;
-}
-
 void hookExEdit()
 {
 	// 拡張編集が読み込まれたのでアドレスを取得する。
@@ -208,7 +192,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 			MY_TRACE_STR(windowName);
 
 			// AviUtl ウィンドウのコンテナの初期化。
-			addShuttleToMap(g_aviutlWindow, _T("* AviUtl"), hwnd);
+			g_shuttleManager.addShuttle(g_aviutlWindow, _T("* AviUtl"), hwnd);
 			::SetProp(g_hub, _T("AviUtlWindow"), hwnd);
 		}
 		else if (::lstrcmpiA(windowName, "拡張編集") == 0)
@@ -218,7 +202,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 			hookExEdit();
 
 			// 拡張編集ウィンドウのコンテナの初期化。
-			addShuttleToMap(g_exeditWindow, _T("* 拡張編集"), hwnd);
+			g_shuttleManager.addShuttle(g_exeditWindow, _T("* 拡張編集"), hwnd);
 			::SetProp(g_hub, _T("ExEditWindow"), hwnd);
 		}
 		else if (parent && parent == g_hub)
@@ -227,13 +211,13 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 
 			// その他のプラグインウィンドウのコンテナの初期化。
 			ShuttlePtr shuttle(new Shuttle());
-			addShuttleToMap(shuttle, windowName, hwnd);
+			g_shuttleManager.addShuttle(shuttle, windowName, hwnd);
 		}
 	}
 	else if (::lstrcmpiA(windowName, "ExtendedFilter") == 0)
 	{
 		// 設定ダイアログのコンテナの初期化。
-		addShuttleToMap(g_settingDialog, _T("* 設定ダイアログ"), hwnd);
+		g_shuttleManager.addShuttle(g_settingDialog, _T("* 設定ダイアログ"), hwnd);
 		::SetProp(g_hub, _T("SettingDialog"), hwnd);
 
 		// すべてのウィンドウの初期化処理が終わったので
@@ -388,9 +372,9 @@ IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowA, (LPCSTR className, LPCSTR windowN
 	// 「ショートカット再生」用。
 	if (className && windowName && ::lstrcmpiA(className, "AviUtl") == 0)
 	{
-		auto it = g_shuttleMap.find(windowName);
-		if (it != g_shuttleMap.end())
-			return it->second->m_hwnd;
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(windowName);
+		if (shuttle)
+			return shuttle->m_hwnd;
 	}
 
 	return true_FindWindowA(className, windowName);
@@ -421,12 +405,12 @@ IMPLEMENT_HOOK_PROC(HWND, WINAPI, FindWindowExA, (HWND parent, HWND childAfter, 
 		// 「キーフレームプラグイン」用。
 		else if (::lstrcmpiA(className, "AviUtl") == 0 && windowName)
 		{
-			auto it = g_shuttleMap.find(windowName);
-			if (it != g_shuttleMap.end())
+			ShuttlePtr shuttle = g_shuttleManager.getShuttle(windowName);
+			if (shuttle)
 			{
 				MY_TRACE(_T("%hs を返します\n"), windowName);
 
-				return it->second->m_hwnd;
+				return shuttle->m_hwnd;
 			}
 		}
 	}
@@ -564,7 +548,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTA
 	{
 		// マイパレットダイアログのコンテナの初期化。
 		ShuttlePtr shuttle(new Shuttle());
-		addShuttleToMap(shuttle, windowName, hwnd);
+		g_shuttleManager.addShuttle(shuttle, windowName, hwnd);
 	}
 
 	return hwnd;

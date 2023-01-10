@@ -55,7 +55,7 @@ int showConfigDialog(HWND hwnd)
 	g_showPlayer = Button_GetCheck(hwndShowPlayer);
 
 	// レイアウトを再計算する。
-	calcAllLayout();
+	g_colonyManager.calcAllLayout();
 
 	return retValue;
 }

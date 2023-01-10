@@ -21,10 +21,11 @@
 #include <crtdbg.h>
 #include <strsafe.h>
 #include <locale.h>
+#include <assert.h>
 
 #include <memory>
 #include <string>
-#include <set>
+#include <vector>
 #include <map>
 
 #import <msxml3.dll>

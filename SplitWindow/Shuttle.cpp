@@ -32,6 +32,9 @@ void Shuttle::init(HWND hwnd)
 	int w = getWidth(rc);
 	int h = getHeight(rc);
 
+	// ターゲットウィンドウの表示状態を取得しておく。
+	BOOL visible = ::IsWindowVisible(m_hwnd);
+
 	// ターゲットの親をフローティングコンテナに変更する。
 	::SetParent(m_hwnd, m_floatContainer->m_hwnd);
 
@@ -40,7 +43,7 @@ void Shuttle::init(HWND hwnd)
 	::SetWindowPos(m_hwnd, 0, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 
 	// ターゲットが表示状態ならフローティングコンテナを表示する。
-	if (::IsWindowVisible(m_hwnd))
+	if (visible)
 		::ShowWindow(m_floatContainer->m_hwnd, SW_SHOW);
 
 	// ターゲットをサブクラス化する。
@@ -96,6 +99,18 @@ LRESULT Shuttle::onTargetWndProc(Container* container, HWND hwnd, UINT message, 
 {
 	switch (message)
 	{
+	case WM_NCDESTROY:
+		{
+			// ターゲットウィンドウが削除されたので、シャトルも削除する。
+
+			MY_TRACE(_T("WM_NCDESTROY, 0x%08X\n"), hwnd);
+
+			LRESULT result = container->onTargetWndProc(hwnd, message, wParam, lParam);
+
+			g_shuttleManager.removeShuttle(this);
+
+			return result;
+		}
 	case WM_NCPAINT:
 		{
 			// クライアント領域を除外してから塗り潰す。
@@ -206,11 +221,9 @@ void Shuttle::showTargetWindow()
 	}
 }
 
-void Shuttle::dockWindow(LPCRECT rc)
+void Shuttle::dockWindow()
 {
 	showTargetWindow();
-
-	resizeDockContainer(rc);
 
 	MY_TRACE_HWND(m_pane->m_owner);
 
@@ -255,6 +268,7 @@ LRESULT CALLBACK Shuttle::targetWndProc(HWND hwnd, UINT message, WPARAM wParam, 
 {
 	HWND hwndContainer = ::GetParent(hwnd);
 	Container* container = Container::getContainer(hwndContainer);
+	if (!container) return ::DefWindowProc(hwnd, message, wParam, lParam);
 	return container->m_shuttle->onTargetWndProc(container, hwnd, message, wParam, lParam);
 }
 

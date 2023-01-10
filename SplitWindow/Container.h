@@ -22,6 +22,7 @@ public:
 	static LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	static Container* getContainer(HWND hwndContainer);
 	static void setContainer(HWND hwndContainer, Container* container);
+	static void removeContainer(HWND hwndContainer);
 };
 
 //---------------------------------------------------------------------

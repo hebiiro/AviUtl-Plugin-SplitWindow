@@ -32,8 +32,6 @@ class Pane; typedef std::shared_ptr<Pane> PanePtr;
 class Shuttle; typedef std::shared_ptr<Shuttle> ShuttlePtr;
 class Container; typedef std::shared_ptr<Container> ContainerPtr;
 
-typedef std::map<_bstr_t, ShuttlePtr> ShuttleMap;
-
 class AviUtlWindow; typedef std::shared_ptr<AviUtlWindow> AviUtlWindowPtr;
 class ExEditWindow; typedef std::shared_ptr<ExEditWindow> ExEditWindowPtr;
 class SettingDialog; typedef std::shared_ptr<SettingDialog> SettingDialogPtr;
@@ -99,6 +97,7 @@ public:
 	void normalize();
 	void recalcLayout();
 	void recalcLayout(LPCRECT rc);
+	BOOL hitTestCaption(POINT point);
 	PanePtr hitTestPane(POINT point);
 	PanePtr hitTestBorder(POINT point);
 	int getDragOffset(POINT point);

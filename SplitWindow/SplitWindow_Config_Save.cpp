@@ -88,7 +88,7 @@ HRESULT saveHub(const MSXML2::IXMLDOMElementPtr& element)
 
 		setPrivateProfileWindow(hubElement, L"placement", hwndHub);
 
-		PanePtr root = getRootPane(hwndHub);
+		PanePtr root = g_colonyManager.getRootPane(hwndHub);
 
 		// <pane> を作成する。
 		savePane(hubElement, root);
@@ -102,18 +102,17 @@ HRESULT saveColony(const MSXML2::IXMLDOMElementPtr& element)
 {
 	MY_TRACE(_T("saveColony()\n"));
 
-	for (auto hwndColony : g_colonySet)
+	for (auto colony : g_colonyManager.m_colonyArray)
 	{
 		// <colony> を作成する。
 		MSXML2::IXMLDOMElementPtr colonyElement = appendElement(element, L"colony");
 
 		TCHAR name[MAX_PATH] = {};
-		::GetWindowText(hwndColony, name, MAX_PATH);
+		::GetWindowText(colony, name, MAX_PATH);
 
 		setPrivateProfileString(colonyElement, L"name", name);
-		setPrivateProfileWindow(colonyElement, L"placement", hwndColony);
 
-		PanePtr root = getRootPane(hwndColony);
+		PanePtr root = g_colonyManager.getRootPane(colony);
 
 		// <pane> を作成する。
 		savePane(colonyElement, root);
@@ -146,7 +145,7 @@ HRESULT savePane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane)
 		// <dockShuttle> を作成する。
 		MSXML2::IXMLDOMElementPtr dockShuttleElement = appendElement(paneElement, L"dockShuttle");
 
-		for (auto& x : g_shuttleMap)
+		for (auto& x : g_shuttleManager.m_map)
 		{
 			if (shuttle == x.second.get())
 			{
@@ -173,7 +172,7 @@ HRESULT saveFloatShuttle(const MSXML2::IXMLDOMElementPtr& element)
 {
 	MY_TRACE(_T("saveFloatShuttle()\n"));
 
-	for (auto x : g_shuttleMap)
+	for (auto x : g_shuttleManager.m_map)
 	{
 		// <floatShuttle> を作成する。
 		MSXML2::IXMLDOMElementPtr floatShuttleElement = appendElement(element, L"floatShuttle");

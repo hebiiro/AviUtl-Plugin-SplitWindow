@@ -3,6 +3,7 @@
 // SplitWindow.rc で使用
 //
 #define IDD_CONFIG                      101
+#define IDD_RENAME_COLONY               102
 #define IDC_LAYOUT_MODE                 1001
 #define IDC_WINDOW_TOP_LEFT             1002
 #define IDC_WINDOW_TOP_RIGHT            1003
@@ -33,6 +34,7 @@
 #define IDC_MENU_BREAK                  1028
 #define IDC_TAB_MODE                    1029
 #define IDC_FORCE_SCROLL                1030
+#define IDC_NEW_NAME                    1030
 #define IDC_TAB_HEIGHT                  1031
 #define IDC_SHOW_PLAYER                 1032
 
@@ -43,7 +45,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_CONTROL_VALUE         1031
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
