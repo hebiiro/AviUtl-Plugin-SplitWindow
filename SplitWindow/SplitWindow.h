@@ -133,6 +133,7 @@ DECLARE_HOOK_PROC(LONG, WINAPI, SetWindowLongA, (HWND hwnd, int index, LONG newL
 DECLARE_HOOK_PROC(INT_PTR, CALLBACK, ScriptParamDlgProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam));
 DECLARE_HOOK_PROC(INT_PTR, WINAPI, vsthost_DialogBoxIndirectParamA, (HINSTANCE instance, LPCDLGTEMPLATEA dialogTemplate, HWND parent, DLGPROC dlgProc, LPARAM initParam));
 DECLARE_HOOK_PROC(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTANCE instance, LPCSTR templateName, HWND parent, DLGPROC dlgProc, LPARAM initParam));
+DECLARE_HOOK_PROC(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT id, UINT flags));
 
 COLORREF WINAPI Dropper_GetPixel(HDC dc, int x, int y);
 HWND WINAPI KeyboardHook_GetActiveWindow();

@@ -103,6 +103,20 @@ void hookExEdit()
 			MY_TRACE_HEX(true_color_palette_CreateDialogParamA);
 		}
 	}
+
+	{
+		// extoolbar.auf 内の ::GetMenuState() をフックする。
+
+		HMODULE extoolbar = ::GetModuleHandle(_T("extoolbar.auf"));
+		MY_TRACE_HEX(extoolbar);
+
+		if (extoolbar)
+		{
+			true_extoolbar_GetMenuState = hookImportFunc(
+				extoolbar, "GetMenuState", hook_extoolbar_GetMenuState);
+			MY_TRACE_HEX(true_extoolbar_GetMenuState);
+		}
+	}
 }
 
 //---------------------------------------------------------------------
@@ -152,7 +166,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 		{
 			MY_TRACE_STR(windowName);
 
-			// AviUtl ウィンドウのコンテナの初期化。
+			// AviUtl ウィンドウ用のシャトルの初期化。
 			g_shuttleManager.addShuttle(g_aviutlWindow, _T("* AviUtl"), hwnd);
 			::SetProp(g_hub, _T("AviUtlWindow"), hwnd);
 		}
@@ -162,7 +176,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 
 			hookExEdit();
 
-			// 拡張編集ウィンドウのコンテナの初期化。
+			// 拡張編集ウィンドウ用のシャトルの初期化。
 			g_shuttleManager.addShuttle(g_exeditWindow, _T("* 拡張編集"), hwnd);
 			::SetProp(g_hub, _T("ExEditWindow"), hwnd);
 		}
@@ -170,14 +184,14 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 		{
 			MY_TRACE_STR(windowName);
 
-			// その他のプラグインウィンドウのコンテナの初期化。
+			// その他のプラグインウィンドウ用のシャトルの初期化。
 			ShuttlePtr shuttle(new Shuttle());
 			g_shuttleManager.addShuttle(shuttle, windowName, hwnd);
 		}
 	}
 	else if (::lstrcmpiA(windowName, "ExtendedFilter") == 0)
 	{
-		// 設定ダイアログのコンテナの初期化。
+		// 設定ダイアログ用のシャトルの初期化。
 		g_shuttleManager.addShuttle(g_settingDialog, _T("* 設定ダイアログ"), hwnd);
 		::SetProp(g_hub, _T("SettingDialog"), hwnd);
 
@@ -507,12 +521,21 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTA
 
 	if (::lstrcmpiA(windowName, "マイパレット") == 0)
 	{
-		// マイパレットダイアログのコンテナの初期化。
+		// マイパレットダイアログ用のシャトルの初期化。
 		ShuttlePtr shuttle(new Shuttle());
 		g_shuttleManager.addShuttle(shuttle, windowName, hwnd);
 	}
 
 	return hwnd;
+}
+
+IMPLEMENT_HOOK_PROC_NULL(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT id, UINT flags))
+{
+	MY_TRACE(_T("extoolbar_GetMenuState(0x%08, 0x%08, 0x%08)\n"), menu, id, flags);
+
+	UINT result = true_extoolbar_GetMenuState(menu, id, flags);
+	if (result == -1) return 0;
+	return result;
 }
 
 COLORREF WINAPI Dropper_GetPixel(HDC _dc, int x, int y)
