@@ -94,8 +94,6 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		{
 			MY_TRACE(_T("colonyProc(WM_DESTROY)\n"));
 
-			g_colonyManager.erase(hwnd);
-
 			break;
 		}
 	case WM_CLOSE:
@@ -126,6 +124,8 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
 				return 0;
 			}
+
+			g_colonyManager.erase(hwnd);
 		
 			break;
 		}

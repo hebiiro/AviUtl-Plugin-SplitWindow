@@ -223,8 +223,6 @@ void Shuttle::showTargetWindow()
 
 void Shuttle::dockWindow()
 {
-	showTargetWindow();
-
 	MY_TRACE_HWND(m_pane->m_owner);
 
 	// ドッキングコンテナの親ウィンドウを切り替える。
@@ -234,6 +232,8 @@ void Shuttle::dockWindow()
 	::SetParent(m_hwnd, m_dockContainer->m_hwnd);
 	::ShowWindow(m_floatContainer->m_hwnd, SW_HIDE);
 	::ShowWindow(m_dockContainer->m_hwnd, SW_SHOW);
+
+	showTargetWindow();
 }
 
 void Shuttle::floatWindow()
