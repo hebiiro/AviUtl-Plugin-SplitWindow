@@ -3,6 +3,34 @@
 
 //---------------------------------------------------------------------
 
+class ColonyShuttle : public Shuttle
+{
+public:
+
+	virtual LRESULT onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		switch (message)
+		{
+		case WM_NCDESTROY:
+			{
+				// ターゲットウィンドウが削除されたので、シャトルも削除する。
+
+				MY_TRACE(_T("ColonyShuttle::onTargetWndProc(0x%08X, WM_NCDESTROY)\n"), hwnd);
+
+				LRESULT result = Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
+
+				g_shuttleManager.removeShuttle(this);
+
+				return result;
+			}
+		}
+
+		return Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
+	}
+};
+
+//---------------------------------------------------------------------
+
 // 他のウィンドウの土台となるベースウィンドウを作成する。
 HWND createColony(LPCTSTR name)
 {
@@ -44,7 +72,7 @@ HWND createColony(LPCTSTR name)
 
 	{
 		// コロニーをシャトルの中に入れる。
-		ShuttlePtr shuttle(new Shuttle());
+		ShuttlePtr shuttle(new ColonyShuttle());
 		g_shuttleManager.addShuttle(shuttle, name, hwnd);
 	}
 

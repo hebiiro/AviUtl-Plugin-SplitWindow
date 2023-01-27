@@ -99,18 +99,6 @@ LRESULT Shuttle::onTargetWndProc(Container* container, HWND hwnd, UINT message, 
 {
 	switch (message)
 	{
-	case WM_NCDESTROY:
-		{
-			// ターゲットウィンドウが削除されたので、シャトルも削除する。
-
-			MY_TRACE(_T("WM_NCDESTROY, 0x%08X\n"), hwnd);
-
-			LRESULT result = container->onTargetWndProc(hwnd, message, wParam, lParam);
-
-			g_shuttleManager.removeShuttle(this);
-
-			return result;
-		}
 	case WM_NCPAINT:
 		{
 			// クライアント領域を除外してから塗り潰す。
