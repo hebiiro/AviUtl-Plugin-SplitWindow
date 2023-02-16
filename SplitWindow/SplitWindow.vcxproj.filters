@@ -50,6 +50,9 @@
     <ClInclude Include="ConfigDialog.h">
       <Filter>Dialog</Filter>
     </ClInclude>
+    <ClInclude Include="ExplorerManager.h">
+      <Filter>Element</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SplitWindow.cpp" />
@@ -96,6 +99,10 @@
     </ClCompile>
     <ClCompile Include="RenameColonyDialog.cpp">
       <Filter>Dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitWindow_Explorer.cpp" />
+    <ClCompile Include="ExplorerManager.cpp">
+      <Filter>Element</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

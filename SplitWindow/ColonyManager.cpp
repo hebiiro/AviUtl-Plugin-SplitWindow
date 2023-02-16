@@ -47,7 +47,7 @@ void ColonyManager::calcAllLayout()
 	calcLayout(g_hub);
 	::InvalidateRect(g_hub, 0, FALSE);
 
-	for (auto colony : m_colonyArray)
+	for (auto colony : m_array)
 	{
 		calcLayout(colony);
 		::InvalidateRect(colony, 0, FALSE);
@@ -59,10 +59,10 @@ void ColonyManager::updateColonyMenu()
 	// すべての項目を削除する。
 	while (::DeleteMenu(g_colonyMenu, 0, MF_BYPOSITION)){}
 
-	int c = (int)m_colonyArray.size();
+	int c = (int)m_array.size();
 	for (int i = 0; i < c; i++)
 	{
-		HWND colony = m_colonyArray[i];
+		HWND colony = m_array[i];
 
 		MENUITEMINFO mii = { sizeof(mii) };
 		mii.fMask = MIIM_STRING | MIIM_DATA | MIIM_ID | MIIM_STATE;
@@ -105,18 +105,18 @@ void ColonyManager::insert(HWND colony)
 	if (g_hub)
 	{
 		// コレクションに追加する。
-		m_colonyArray.push_back(colony);
+		m_array.push_back(colony);
 	}
 }
 
 void ColonyManager::erase(HWND colony)
 {
 	// コレクションから削除する。
-	for (auto it = m_colonyArray.begin(); it != m_colonyArray.end(); it++)
+	for (auto it = m_array.begin(); it != m_array.end(); it++)
 	{
 		if (colony == *it)
 		{
-			m_colonyArray.erase(it);
+			m_array.erase(it);
 			break;
 		}
 	}
@@ -135,14 +135,14 @@ void ColonyManager::erase(HWND colony)
 void ColonyManager::clear()
 {
 	// ::DestroyWindow(colony) でコレクションの要素が減るのでコレクションをコピーしておく。
-	auto colonyArray = m_colonyArray;
+	auto colonyArray = m_array;
 
 	// 全てのコロニーを削除する。
 	for (auto colony : colonyArray)
 		::DestroyWindow(colony);
 
 	// 念のためクリアする。
-	m_colonyArray.clear();
+	m_array.clear();
 }
 
 //---------------------------------------------------------------------

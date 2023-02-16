@@ -30,10 +30,12 @@
 
 #import <msxml3.dll>
 
+#include "../../ObjectExplorer/Common/ObjectExplorer.h"
 #include "AviUtl/aviutl_exedit_sdk/aviutl.hpp"
 #include "AviUtl/aviutl_exedit_sdk/exedit.hpp"
 #include "Common/Tracer.h"
 #include "Common/WinUtility.h"
+#include "Common/Gdi.h"
 #include "Common/Dialog.h"
 #include "Common/MSXML.h"
 #include "Common/Hook.h"

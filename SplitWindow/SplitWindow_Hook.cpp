@@ -531,7 +531,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTA
 
 IMPLEMENT_HOOK_PROC_NULL(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT id, UINT flags))
 {
-	MY_TRACE(_T("extoolbar_GetMenuState(0x%08, 0x%08, 0x%08)\n"), menu, id, flags);
+	MY_TRACE(_T("extoolbar_GetMenuState(0x%08X, 0x%08X, 0x%08X)\n"), menu, id, flags);
 
 	UINT result = true_extoolbar_GetMenuState(menu, id, flags);
 	if (result == -1) return 0;

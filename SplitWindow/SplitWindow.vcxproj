@@ -193,6 +193,7 @@
     <ClInclude Include="ColonyManager.h" />
     <ClInclude Include="ConfigDialog.h" />
     <ClInclude Include="Container.h" />
+    <ClInclude Include="ExplorerManager.h" />
     <ClInclude Include="Pane.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RenameColonyDialog.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="Container.cpp" />
     <ClCompile Include="Container_Scroll.cpp" />
     <ClCompile Include="Container_Spread.cpp" />
+    <ClCompile Include="ExplorerManager.cpp" />
     <ClCompile Include="Pane.cpp" />
     <ClCompile Include="RenameColonyDialog.cpp" />
     <ClCompile Include="Shuttle.cpp" />
@@ -224,6 +226,7 @@
     <ClCompile Include="SplitWindow_Colony.cpp" />
     <ClCompile Include="SplitWindow_Config_Load.cpp" />
     <ClCompile Include="SplitWindow_Config_Save.cpp" />
+    <ClCompile Include="SplitWindow_Explorer.cpp" />
     <ClCompile Include="SplitWindow_Hook.cpp" />
     <ClCompile Include="SplitWindow_Hub.cpp" />
   </ItemGroup>

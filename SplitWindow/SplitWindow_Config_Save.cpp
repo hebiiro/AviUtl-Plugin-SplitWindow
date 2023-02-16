@@ -63,6 +63,9 @@ HRESULT saveConfig(LPCWSTR fileName, BOOL _export)
 		// <colony> を作成する。
 		saveColony(element);
 
+		// <explorer> を作成する。
+		saveExplorer(element);
+
 		// <floatShuttle> を作成する。
 		saveFloatShuttle(element);
 
@@ -102,20 +105,37 @@ HRESULT saveColony(const MSXML2::IXMLDOMElementPtr& element)
 {
 	MY_TRACE(_T("saveColony()\n"));
 
-	for (auto colony : g_colonyManager.m_colonyArray)
+	for (auto colony : g_colonyManager.m_array)
 	{
 		// <colony> を作成する。
 		MSXML2::IXMLDOMElementPtr colonyElement = appendElement(element, L"colony");
 
 		TCHAR name[MAX_PATH] = {};
 		::GetWindowText(colony, name, MAX_PATH);
-
 		setPrivateProfileString(colonyElement, L"name", name);
 
 		PanePtr root = g_colonyManager.getRootPane(colony);
 
 		// <pane> を作成する。
 		savePane(colonyElement, root);
+	}
+
+	return S_OK;
+}
+
+// <explorer> を作成する。
+HRESULT saveExplorer(const MSXML2::IXMLDOMElementPtr& element)
+{
+	MY_TRACE(_T("saveExplorer()\n"));
+
+	for (auto explorer : g_explorerManager.m_array)
+	{
+		// <explorer> を作成する。
+		MSXML2::IXMLDOMElementPtr explorerElement = appendElement(element, L"explorer");
+
+		TCHAR name[MAX_PATH] = {};
+		::GetWindowText(explorer, name, MAX_PATH);
+		setPrivateProfileString(explorerElement, L"name", name);
 	}
 
 	return S_OK;

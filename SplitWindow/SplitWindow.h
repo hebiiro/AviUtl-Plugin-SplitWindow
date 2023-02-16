@@ -11,6 +11,7 @@ struct Label { LPCWSTR label; int value; };
 #include "ShuttleManager.h"
 #include "Container.h"
 #include "ColonyManager.h"
+#include "ExplorerManager.h"
 
 //---------------------------------------------------------------------
 
@@ -23,10 +24,13 @@ struct CommandID
 {
 	static const UINT COLONY_BEGIN = 100;
 	static const UINT COLONY_END = 200;
+	static const UINT EXPLORER_BEGIN = 200;
+	static const UINT EXPLORER_END = 300;
 	static const UINT SHOW_CONFIG_DIALOG = 1000;
 	static const UINT IMPORT_LAYOUT = 1001;
 	static const UINT EXPORT_LAYOUT = 1002;
 	static const UINT CREATE_COLONY = 1003;
+	static const UINT CREATE_EXPLORER = 1004;
 	
 	static const UINT SPLIT_MODE_NONE = 1000;
 	static const UINT SPLIT_MODE_VERT = 1001;
@@ -61,6 +65,7 @@ extern HINSTANCE g_instance;
 extern HWND g_hub;
 extern HTHEME g_theme;
 extern HMENU g_colonyMenu;
+extern HMENU g_explorerMenu;
 extern HHOOK g_gmHook;
 
 extern AviUtlWindowPtr g_aviutlWindow;
@@ -68,6 +73,7 @@ extern ExEditWindowPtr g_exeditWindow;
 extern SettingDialogPtr g_settingDialog;
 
 extern ColonyManager g_colonyManager;
+extern ExplorerManager g_explorerManager;
 extern ShuttleManager g_shuttleManager;
 extern PanePtr g_hotBorderPane;
 
@@ -97,12 +103,16 @@ HWND createPopupWindow(HWND parent);
 HWND createColony(LPCTSTR name);
 LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+HWND createExplorer(LPCTSTR name);
+LRESULT CALLBACK explorerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 HWND createHub();
 LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HRESULT loadConfig();
 HRESULT loadConfig(LPCWSTR fileName, BOOL _import);
 HRESULT preLoadColony(const MSXML2::IXMLDOMElementPtr& element);
+HRESULT preLoadExplorer(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT loadHub(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT loadColony(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT loadPane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane);
@@ -112,6 +122,7 @@ HRESULT saveConfig();
 HRESULT saveConfig(LPCWSTR fileName, BOOL _export);
 HRESULT saveHub(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT saveColony(const MSXML2::IXMLDOMElementPtr& element);
+HRESULT saveExplorer(const MSXML2::IXMLDOMElementPtr& element);
 HRESULT savePane(const MSXML2::IXMLDOMElementPtr& element, PanePtr pane);
 HRESULT saveFloatShuttle(const MSXML2::IXMLDOMElementPtr& element);
 

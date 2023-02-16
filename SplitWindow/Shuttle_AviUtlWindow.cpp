@@ -33,6 +33,9 @@ LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT mess
 			// AviUtl が終了しようとしているので設定を保存する。
 			saveConfig();
 
+			// ObjectExplorer が存在するなら保存処理をさせる。
+			g_explorerManager.sendExitMessage();
+
 			break;
 		}
 	case WM_SETTEXT:

@@ -159,6 +159,14 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				wParam < CommandID::COLONY_END)
 			{
 				g_colonyManager.executeColonyMenu(wParam);
+				break;
+			}
+
+			if (wParam >= CommandID::EXPLORER_BEGIN &&
+				wParam < CommandID::EXPLORER_END)
+			{
+				g_explorerManager.executeExplorerMenu(wParam);
+				break;
 			}
 
 			switch (wParam)
@@ -191,6 +199,13 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 					break;
 				}
+			case CommandID::CREATE_EXPLORER:
+				{
+					// エクスプローラを新規作成する。
+					createExplorer(0);
+
+					break;
+				}
 			case SC_RESTORE:
 			case SC_MINIMIZE: // 「patch.aul」用。
 				{
@@ -207,6 +222,9 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if ((HMENU)wParam == g_colonyMenu)
 				g_colonyManager.updateColonyMenu();
 
+			if ((HMENU)wParam == g_explorerMenu)
+				g_explorerManager.updateExplorerMenu();
+
 			break;
 		}
 	case WM_CREATE:
@@ -219,13 +237,19 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			g_colonyMenu = ::CreatePopupMenu();
 			MY_TRACE_HEX(g_colonyMenu);
 
+			g_explorerMenu = ::CreatePopupMenu();
+			MY_TRACE_HEX(g_explorerMenu);
+
 			HMENU menu = ::GetSystemMenu(hwnd, FALSE);
-			::InsertMenu(menu, 0, MF_BYPOSITION | MF_STRING, CommandID::CREATE_COLONY, _T("コロニーを新規作成"));
-			::InsertMenu(menu, 1, MF_BYPOSITION | MF_STRING, CommandID::IMPORT_LAYOUT, _T("レイアウトのインポート"));
-			::InsertMenu(menu, 2, MF_BYPOSITION | MF_STRING, CommandID::EXPORT_LAYOUT, _T("レイアウトのエクスポート"));
-			::InsertMenu(menu, 3, MF_BYPOSITION | MF_STRING, CommandID::SHOW_CONFIG_DIALOG, _T("SplitWindowの設定"));
-			::InsertMenu(menu, 4, MF_BYPOSITION | MF_POPUP, (UINT)g_colonyMenu, _T("コロニー"));
-			::InsertMenu(menu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
+			int index = 0;
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::CREATE_COLONY, _T("コロニーを新規作成"));
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::CREATE_EXPLORER, _T("エクスプローラを新規作成"));
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::IMPORT_LAYOUT, _T("レイアウトのインポート"));
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::EXPORT_LAYOUT, _T("レイアウトのエクスポート"));
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::SHOW_CONFIG_DIALOG, _T("SplitWindowの設定"));
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_POPUP, (UINT)g_colonyMenu, _T("コロニー"));
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_POPUP, (UINT)g_explorerMenu, _T("エクスプローラ"));
+			::InsertMenu(menu, index++, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 			break;
 		}
@@ -233,6 +257,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			MY_TRACE(_T("hubProc(WM_DESTROY)\n"));
 
+			::DestroyMenu(g_explorerMenu), g_explorerMenu = 0;
 			::DestroyMenu(g_colonyMenu), g_colonyMenu = 0;
 			::CloseThemeData(g_theme), g_theme = 0;
 

@@ -6,7 +6,7 @@ class ColonyManager
 {
 public:
 
-	std::vector<HWND> m_colonyArray;
+	std::vector<HWND> m_array;
 
 public:
 

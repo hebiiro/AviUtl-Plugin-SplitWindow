@@ -17,11 +17,11 @@ public:
 
 				MY_TRACE(_T("ColonyShuttle::onTargetWndProc(0x%08X, WM_NCDESTROY)\n"), hwnd);
 
-				LRESULT result = Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
+				ShuttlePtr shuttle(shared_from_this());
 
 				g_shuttleManager.removeShuttle(this);
 
-				return result;
+				return Shuttle::onTargetWndProc(container, hwnd, message, wParam, lParam);
 			}
 		}
 
@@ -72,7 +72,7 @@ HWND createColony(LPCTSTR name)
 
 	{
 		// コロニーをシャトルの中に入れる。
-		ShuttlePtr shuttle(new ColonyShuttle());
+		ShuttlePtr shuttle = std::make_shared<ColonyShuttle>();
 		g_shuttleManager.addShuttle(shuttle, name, hwnd);
 	}
 
@@ -134,6 +134,10 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
 				if (IDYES != ::MessageBox(hwnd, _T("コロニーを削除しますか？"), _T("SplitWindow"), MB_YESNO))
 					return 0;
+
+				// 何もしないとハブが他のウィンドウの後ろに隠れてしまうので、
+				// 手動でフォアグラウンドにする。
+				::SetActiveWindow(g_hub);
 			}
 			else
 			{
@@ -165,79 +169,72 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	case WM_PAINT:
 		{
-			PAINTSTRUCT ps;
-			HDC dc = ::BeginPaint(hwnd, &ps);
-			RECT rc = ps.rcPaint;
+			PaintDC pdc(hwnd);
+			RECT rc = pdc.m_ps.rcPaint;
+			UxDC dc(pdc, &rc);
 
-			BP_PAINTPARAMS pp = { sizeof(pp) };
-			HDC mdc = 0;
-			HPAINTBUFFER pb = ::BeginBufferedPaint(dc, &rc, BPBF_COMPATIBLEBITMAP, &pp, &mdc);
+			if (!dc.isValid())
+				return 0;
 
-			if (pb)
+			PanePtr root = g_colonyManager.getRootPane(hwnd);
+
 			{
-				HDC dc = mdc;
+				// 背景を塗りつぶす。
 
-				PanePtr root = g_colonyManager.getRootPane(hwnd);
-
-				{
-					// 背景を塗りつぶす。
-
-					fillBackground(dc, &rc);
-				}
-
-				{
-					// ボーダーを描画する。
-
-					HBRUSH brush = ::CreateSolidBrush(g_borderColor);
-					root->drawBorder(dc, brush);
-					::DeleteObject(brush);
-				}
-
-				{
-					// ホットボーダーを描画する。
-
-					// ホットボーダーの矩形を取得できたら
-					RECT rcHotBorder;
-					if (g_hotBorderPane && g_hotBorderPane->getBorderRect(&rcHotBorder))
-					{
-						// テーマを使用するなら
-						if (g_useTheme)
-						{
-							int partId = WP_BORDER;
-							int stateId = CS_ACTIVE;
-
-							// テーマ API を使用してボーダーを描画する。
-							::DrawThemeBackground(g_theme, dc, partId, stateId, &rcHotBorder, 0);
-						}
-						// テーマを使用しないなら
-						else
-						{
-							// ブラシで塗りつぶす。
-							HBRUSH brush = ::CreateSolidBrush(g_hotBorderColor);
-							::FillRect(dc, &rcHotBorder, brush);
-							::DeleteObject(brush);
-						}
-					}
-				}
-
-				{
-					// 各ウィンドウのキャプションを描画する。
-
-					LOGFONTW lf = {};
-					::GetThemeSysFont(g_theme, TMT_CAPTIONFONT, &lf);
-					HFONT font = ::CreateFontIndirectW(&lf);
-					HFONT oldFont = (HFONT)::SelectObject(dc, font);
-
-					root->drawCaption(dc);
-
-					::SelectObject(dc, oldFont);
-					::DeleteObject(font);
-				}
-
-				::EndBufferedPaint(pb, TRUE);
+				fillBackground(dc, &rc);
 			}
 
-			::EndPaint(hwnd, &ps);
+			{
+				// ボーダーを描画する。
+
+				HBRUSH brush = ::CreateSolidBrush(g_borderColor);
+				root->drawBorder(dc, brush);
+				::DeleteObject(brush);
+			}
+
+			{
+				// ホットボーダーを描画する。
+
+				// ホットボーダーの矩形を取得できたら
+				RECT rcHotBorder;
+				if (g_hotBorderPane &&
+					g_hotBorderPane->m_owner == hwnd &&
+					g_hotBorderPane->getBorderRect(&rcHotBorder))
+				{
+					// テーマを使用するなら
+					if (g_useTheme)
+					{
+						int partId = WP_BORDER;
+						int stateId = CS_ACTIVE;
+
+						// テーマ API を使用してボーダーを描画する。
+						::DrawThemeBackground(g_theme, dc, partId, stateId, &rcHotBorder, 0);
+					}
+					// テーマを使用しないなら
+					else
+					{
+						// ブラシで塗りつぶす。
+						HBRUSH brush = ::CreateSolidBrush(g_hotBorderColor);
+						::FillRect(dc, &rcHotBorder, brush);
+						::DeleteObject(brush);
+					}
+				}
+			}
+
+			{
+				// 各ウィンドウのキャプションを描画する。
+
+				LOGFONTW lf = {};
+				::GetThemeSysFont(g_theme, TMT_CAPTIONFONT, &lf);
+				HFONT font = ::CreateFontIndirectW(&lf);
+				HFONT oldFont = (HFONT)::SelectObject(dc, font);
+
+				root->drawCaption(dc);
+
+				::SelectObject(dc, oldFont);
+				::DeleteObject(font);
+			}
+
 			return 0;
 		}
 	case WM_SETCURSOR:

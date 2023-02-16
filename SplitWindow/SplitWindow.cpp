@@ -16,6 +16,7 @@ HINSTANCE g_instance = 0;
 HWND g_hub = 0;
 HTHEME g_theme = 0;
 HMENU g_colonyMenu = 0;
+HMENU g_explorerMenu = 0;
 HHOOK g_gmHook = 0;
 
 AviUtlWindowPtr g_aviutlWindow(new AviUtlWindow());
@@ -23,6 +24,7 @@ ExEditWindowPtr g_exeditWindow(new ExEditWindow());
 SettingDialogPtr g_settingDialog(new SettingDialog());
 
 ColonyManager g_colonyManager;
+ExplorerManager g_explorerManager;
 ShuttleManager g_shuttleManager;
 PanePtr g_hotBorderPane;
 
@@ -136,6 +138,9 @@ void showPaneMenu(HWND hwndColony)
 	HWND colonyInShuttle = 0;
 	if (shuttle && g_colonyManager.getRootPane(shuttle->m_hwnd))
 		colonyInShuttle = shuttle->m_hwnd;
+	HWND explorerInShuttle = 0;
+	if (shuttle && g_explorerManager.getObjectExplorer(shuttle->m_hwnd))
+		explorerInShuttle = shuttle->m_hwnd;
 
 	HMENU menu = ::CreatePopupMenu();
 
@@ -157,7 +162,7 @@ void showPaneMenu(HWND hwndColony)
 		::CheckMenuItem(menu, CommandID::IS_BORDER_LOCKED, MF_CHECKED);
 	::AppendMenu(menu, MF_SEPARATOR, -1, 0);
 	::AppendMenu(menu, MF_STRING, CommandID::RENAME_COLONY, _T("名前を変更"));
-	if (!colonyInShuttle)
+	if (!colonyInShuttle && !explorerInShuttle)
 		::EnableMenuItem(menu, CommandID::RENAME_COLONY, MF_GRAYED | MF_DISABLED);
 
 	{

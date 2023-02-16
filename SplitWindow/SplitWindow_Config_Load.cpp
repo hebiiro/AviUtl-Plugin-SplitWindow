@@ -70,6 +70,9 @@ HRESULT loadConfig(LPCWSTR fileName, BOOL _import)
 		// 事前に <colony> を読み込む。
 		preLoadColony(element);
 
+		// 事前に <explorer> を読み込む。
+		preLoadExplorer(element);
+
 		// <hub> を読み込む。
 		loadHub(element);
 
@@ -112,6 +115,32 @@ HRESULT preLoadColony(const MSXML2::IXMLDOMElementPtr& element)
 
 		// コロニーを作成する。
 		HWND colony = createColony(name);
+	}
+
+	return S_OK;
+}
+
+// 事前に <explorer> を読み込む。
+HRESULT preLoadExplorer(const MSXML2::IXMLDOMElementPtr& element)
+{
+	MY_TRACE(_T("preLoadExplorer()\n"));
+
+	// 一旦すべてのコロニーを削除する。
+	g_explorerManager.clear();
+
+	// <explorer> を読み込む。
+	MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"explorer");
+	int c = nodeList->length;
+	for (int i = 0; i < c; i++)
+	{
+		MSXML2::IXMLDOMElementPtr explorerElement = nodeList->item[i];
+
+		// 名前を読み込む。
+		_bstr_t name = L"";
+		getPrivateProfileName(explorerElement, L"name", name);
+
+		// コロニーを作成する。
+		HWND explorer = createExplorer(name);
 	}
 
 	return S_OK;
