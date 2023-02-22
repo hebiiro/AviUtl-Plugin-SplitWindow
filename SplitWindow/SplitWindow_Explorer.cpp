@@ -203,6 +203,9 @@ LRESULT CALLBACK explorerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
 		MY_TRACE_HWND(objectExplorer->dialog);
 		MY_TRACE_HWND(objectExplorer->browser);
+
+		::PostMessage(objectExplorer->dialog,
+			WM_AVIUTL_OBJECT_EXPLORER_RESIZE, 0, 0);
 	}
 	else if (message == WM_AVIUTL_OBJECT_EXPLORER_GET)
 	{
