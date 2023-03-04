@@ -28,6 +28,24 @@ void initHook()
 	ATTACH_HOOK_PROC(EnumWindows);
 	ATTACH_HOOK_PROC(SetWindowLongA);
 
+	{
+		TCHAR fileName[MAX_PATH] = {};
+		::GetModuleFileName(0, fileName, MAX_PATH);
+		::PathRemoveFileSpec(fileName);
+		::PathAppend(fileName, _T("aviutl.ini"));
+		MY_TRACE_TSTR(fileName);
+
+		g_movieplaymain = ::GetPrivateProfileInt(_T("system"), _T("movieplaymain"), 0, fileName);
+
+		uintptr_t aviutl = (uintptr_t)::GetModuleHandle(0);
+		MY_TRACE_HEX(aviutl);
+
+		true_aviutl_PlayMain = (Type_aviutl_PlayMain)(aviutl + 0x00053320);
+		ATTACH_HOOK_PROC(aviutl_PlayMain);
+		true_aviutl_PlaySub = (Type_aviutl_PlaySub)(aviutl + 0x00051150);
+		ATTACH_HOOK_PROC(aviutl_PlaySub);
+	}
+
 	if (DetourTransactionCommit() == NO_ERROR)
 	{
 		MY_TRACE(_T("API フックに成功しました\n"));
@@ -536,6 +554,150 @@ IMPLEMENT_HOOK_PROC_NULL(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT
 	UINT result = true_extoolbar_GetMenuState(menu, id, flags);
 	if (result == -1) return 0;
 	return result;
+}
+
+static WINDOWPLACEMENT g_wp = { sizeof(g_wp) };
+
+void begin_aviutl_PlayMain()
+{
+	MY_TRACE(_T("begin_aviutl_PlayMain()\n"));
+
+	if (!g_showPlayer) return;
+
+	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
+
+	if (!g_movieplaymain)
+	{
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"再生ウィンドウ");
+		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
+	}
+
+	::GetWindowPlacement(hwnd, &g_wp);
+	::ShowWindow(hwnd, SW_MAXIMIZE);
+	::SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+}
+
+void end_aviutl_PlayMain()
+{
+	MY_TRACE(_T("end_aviutl_PlayMain()\n"));
+
+	if (!g_showPlayer) return;
+
+	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
+
+	if (!g_movieplaymain)
+	{
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"再生ウィンドウ");
+		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
+	}
+
+	::SetWindowPlacement(hwnd, &g_wp);
+}
+
+#define NAKED(type) __declspec(naked) type
+IMPLEMENT_HOOK_PROC_NULL(NAKED(UINT), __fastcall, aviutl_PlayMain, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5, UINT u6))
+{
+	__asm {
+push        ebp  
+mov         ebp,esp  
+sub         esp,0Ch  
+mov         dword ptr [ebp-8],edx  
+mov         dword ptr [ebp-0Ch],ecx  
+
+call        begin_aviutl_PlayMain
+
+mov         eax,dword ptr [ebp+14h]  
+push        eax  
+mov         ecx,dword ptr [ebp+10h]  
+push        ecx  
+mov         edx,dword ptr [ebp+0Ch]  
+push        edx  
+mov         eax,dword ptr [ebp+8]  
+push        eax  
+mov         edx,dword ptr [ebp-8]
+mov         ecx,dword ptr [ebp-0Ch]
+call        true_aviutl_PlayMain
+add         esp,10h  
+mov         dword ptr [ebp-4],eax  
+
+call        end_aviutl_PlayMain
+
+mov         eax,dword ptr [ebp-4]  
+
+mov         esp,ebp  
+pop         ebp  
+ret
+	};
+}
+
+void begin_aviutl_PlaySub()
+{
+	MY_TRACE(_T("begin_aviutl_PlaySub()\n"));
+
+	if (!g_showPlayer) return;
+
+	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
+
+	if (!g_movieplaymain)
+	{
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"再生ウィンドウ");
+		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
+	}
+
+	::GetWindowPlacement(hwnd, &g_wp);
+	::ShowWindow(hwnd, SW_MAXIMIZE);
+	::SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+}
+
+void end_aviutl_PlaySub()
+{
+	MY_TRACE(_T("end_aviutl_PlaySub()\n"));
+
+	if (!g_showPlayer) return;
+
+	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
+
+	if (!g_movieplaymain)
+	{
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"再生ウィンドウ");
+		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
+	}
+
+	::SetWindowPlacement(hwnd, &g_wp);
+}
+
+#define NAKED(type) __declspec(naked) type
+IMPLEMENT_HOOK_PROC_NULL(NAKED(UINT), __fastcall, aviutl_PlaySub, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5))
+{
+	__asm {
+push        ebp  
+mov         ebp,esp  
+sub         esp,0Ch  
+mov         dword ptr [ebp-8],edx  
+mov         dword ptr [ebp-0Ch],ecx  
+
+call        begin_aviutl_PlaySub
+
+mov         ecx,dword ptr [ebp+10h]  
+push        ecx  
+mov         edx,dword ptr [ebp+0Ch]  
+push        edx  
+mov         eax,dword ptr [ebp+8]  
+push        eax  
+mov         edx,dword ptr [ebp-8]
+mov         ecx,dword ptr [ebp-0Ch]
+call        true_aviutl_PlaySub
+add         esp,0Ch  
+mov         dword ptr [ebp-4],eax  
+
+call        end_aviutl_PlaySub
+
+mov         eax,dword ptr [ebp-4]  
+
+mov         esp,ebp  
+pop         ebp  
+ret
+	};
 }
 
 COLORREF WINAPI Dropper_GetPixel(HDC _dc, int x, int y)

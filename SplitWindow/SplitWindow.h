@@ -93,6 +93,8 @@ extern BOOL g_useTheme;
 extern BOOL g_forceScroll;
 extern BOOL g_showPlayer;
 
+extern BOOL g_movieplaymain;
+
 //---------------------------------------------------------------------
 
 BOOL showTargetMenu(HWND hwndColony, POINT point);
@@ -145,6 +147,8 @@ DECLARE_HOOK_PROC(INT_PTR, CALLBACK, ScriptParamDlgProc, (HWND hwnd, UINT messag
 DECLARE_HOOK_PROC(INT_PTR, WINAPI, vsthost_DialogBoxIndirectParamA, (HINSTANCE instance, LPCDLGTEMPLATEA dialogTemplate, HWND parent, DLGPROC dlgProc, LPARAM initParam));
 DECLARE_HOOK_PROC(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTANCE instance, LPCSTR templateName, HWND parent, DLGPROC dlgProc, LPARAM initParam));
 DECLARE_HOOK_PROC(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT id, UINT flags));
+DECLARE_HOOK_PROC(UINT, __fastcall, aviutl_PlayMain, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5, UINT u6));
+DECLARE_HOOK_PROC(UINT, __fastcall, aviutl_PlaySub, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5));
 
 COLORREF WINAPI Dropper_GetPixel(HDC dc, int x, int y);
 HWND WINAPI KeyboardHook_GetActiveWindow();

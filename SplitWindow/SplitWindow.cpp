@@ -44,6 +44,8 @@ BOOL g_useTheme = FALSE;
 BOOL g_forceScroll = FALSE;
 BOOL g_showPlayer = FALSE;
 
+BOOL g_movieplaymain = FALSE;
+
 //---------------------------------------------------------------------
 
 // メニューのコピーを作成する。
