@@ -17,7 +17,9 @@ void ShuttleManager::addShuttle(ShuttlePtr shuttle, const _bstr_t& name, HWND hw
 	if (getShuttle(name))
 	{
 		// メッセージボックスを出す。
-		::MessageBox(g_hub, _T("ウィンドウ名が重複しています"), _T("SplitWindow"), MB_OK | MB_ICONWARNING);
+		TCHAR text[MAX_PATH] = {};
+		::StringCbPrintf(text, sizeof(text), _T("ウィンドウ名が重複しています\nウィンドウ名 : %ws"), (BSTR)name);
+		::MessageBox(g_hub, text, _T("SplitWindow"), MB_OK | MB_ICONWARNING);
 
 		return;
 	}
