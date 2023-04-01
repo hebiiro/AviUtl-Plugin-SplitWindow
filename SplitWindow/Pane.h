@@ -105,6 +105,7 @@ public:
 	BOOL getBorderRect(LPRECT rc);
 	void drawBorder(HDC dc, HBRUSH brush);
 	void drawCaption(HDC dc);
+	void changeCurrent();
 };
 
 //---------------------------------------------------------------------

@@ -134,7 +134,20 @@ void TabControl::changeCurrent()
 	{
 		Shuttle* shuttle = getShuttle(i);
 
-		::ShowWindow(shuttle->m_dockContainer->m_hwnd, (i == current) ? SW_SHOW : SW_HIDE);
+		if (i == current)
+		{
+			MY_TRACE(_T("%ws を表示します\n"), (BSTR)shuttle->m_name);
+
+			::ShowWindow(shuttle->m_hwnd, SW_SHOW);
+//			::ShowWindow(shuttle->m_dockContainer->m_hwnd, SW_SHOW);
+		}
+		else
+		{
+			MY_TRACE(_T("%ws を非表示にします\n"), (BSTR)shuttle->m_name);
+
+			::ShowWindow(shuttle->m_hwnd, SW_HIDE);
+//			::ShowWindow(shuttle->m_dockContainer->m_hwnd, SW_HIDE);
+		}
 	}
 
 	Pane* pane = getPane(m_hwnd);
@@ -868,6 +881,18 @@ void Pane::drawCaption(HDC dc)
 
 			break;
 		}
+	}
+}
+
+void Pane::changeCurrent()
+{
+	m_tab.changeCurrent();
+
+	for (auto& child : m_children)
+	{
+		if (!child) continue;
+
+		child->changeCurrent();
 	}
 }
 

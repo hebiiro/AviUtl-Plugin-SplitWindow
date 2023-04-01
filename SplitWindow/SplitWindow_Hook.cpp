@@ -119,6 +119,11 @@ void hookExEdit()
 			true_color_palette_CreateDialogParamA = hookImportFunc(
 				color_palette, "CreateDialogParamA", hook_color_palette_CreateDialogParamA);
 			MY_TRACE_HEX(true_color_palette_CreateDialogParamA);
+/*
+			true_color_palette_ShowWindow = hookImportFunc(
+				color_palette, "ShowWindow", hook_color_palette_ShowWindow);
+			MY_TRACE_HEX(true_color_palette_ShowWindow);
+*/
 		}
 	}
 
@@ -545,6 +550,26 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTA
 	}
 
 	return hwnd;
+}
+
+IMPLEMENT_HOOK_PROC_NULL(BOOL, WINAPI, color_palette_ShowWindow, (HWND hwnd, int cmdShow))
+{
+	MY_TRACE(_T("color_palette_ShowWindow()\n"));
+/*
+	if (cmdShow)
+	{
+		ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"マイパレット");
+		if (shuttle && shuttle->m_hwnd == hwnd)
+		{
+			MY_TRACE_HEX(shuttle->m_pane);
+
+			// マイパレットがドッキング中なら
+			if (shuttle->m_pane)
+				return FALSE; // マイパレットを表示しない。
+		}
+	}
+*/
+	return true_color_palette_ShowWindow(hwnd, cmdShow);
 }
 
 IMPLEMENT_HOOK_PROC_NULL(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT id, UINT flags))

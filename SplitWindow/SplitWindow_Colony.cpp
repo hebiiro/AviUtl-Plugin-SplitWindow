@@ -112,7 +112,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	case WM_CREATE:
 		{
-			MY_TRACE(_T("colonyProc(WM_CREATE)\n"));
+			MY_TRACE(_T("colonyProc(WM_CREATE, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			g_colonyManager.insert(hwnd);
 
@@ -120,13 +120,13 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	case WM_DESTROY:
 		{
-			MY_TRACE(_T("colonyProc(WM_DESTROY)\n"));
+			MY_TRACE(_T("colonyProc(WM_DESTROY, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			break;
 		}
 	case WM_CLOSE:
 		{
-			MY_TRACE(_T("colonyProc(WM_CLOSE)\n"));
+			MY_TRACE(_T("colonyProc(WM_CLOSE, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			if (::GetKeyState(VK_SHIFT) < 0)
 			{
@@ -164,6 +164,19 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_SIZE:
 		{
 			g_colonyManager.calcLayout(hwnd);
+
+			break;
+		}
+	case WM_SHOWWINDOW:
+		{
+			MY_TRACE(_T("colonyProc(WM_SHOWWINDOW, 0x%08X, 0x%08X)\n"), wParam, lParam);
+
+			if (wParam)
+			{
+				PanePtr root = g_colonyManager.getRootPane(hwnd);
+
+				root->changeCurrent();
+			}
 
 			break;
 		}
@@ -270,7 +283,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	case WM_LBUTTONDOWN:
 		{
-			MY_TRACE(_T("colonyProc(WM_LBUTTONDOWN)\n"));
+			MY_TRACE(_T("colonyProc(WM_LBUTTONDOWN, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			// マウス座標を取得する。
 			POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -314,7 +327,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	case WM_LBUTTONUP:
 		{
-			MY_TRACE(_T("colonyProc(WM_LBUTTONUP)\n"));
+			MY_TRACE(_T("colonyProc(WM_LBUTTONUP, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			// マウス座標を取得する。
 			POINT point = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -342,7 +355,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	case WM_RBUTTONDOWN:
 		{
-			MY_TRACE(_T("colonyProc(WM_RBUTTONDOWN)\n"));
+			MY_TRACE(_T("colonyProc(WM_RBUTTONDOWN, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			// レイアウト編集メニューを表示する。
 			showPaneMenu(hwnd);
@@ -397,7 +410,7 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	case WM_MOUSELEAVE:
 		{
-			MY_TRACE(_T("colonyProc(WM_MOUSELEAVE)\n"));
+			MY_TRACE(_T("colonyProc(WM_MOUSELEAVE, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			// 再描画用のペイン。
 			PanePtr pane = g_hotBorderPane;
@@ -410,6 +423,40 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
 				// 再描画する。
 				::InvalidateRect(hwnd, &pane->m_position, FALSE);
+			}
+
+			break;
+		}
+	case WM_MOUSEWHEEL:
+		{
+			MY_TRACE(_T("colonyProc(WM_MOUSEWHEEL, 0x%08X, 0x%08X)\n"), wParam, lParam);
+
+			int delta = (short)HIWORD(wParam);
+			POINT point = LP2PT(lParam);
+			::MapWindowPoints(0, hwnd, &point, 1);
+			HWND child = ::ChildWindowFromPointEx(hwnd, point,
+				CWP_SKIPDISABLED | CWP_SKIPINVISIBLE | CWP_SKIPTRANSPARENT);
+
+			Pane* pane = TabControl::getPane(child);
+			if (pane)
+			{
+				int c = pane->m_tab.getTabCount();
+				int current = pane->m_tab.getCurrentIndex();
+
+				if (delta > 0)
+				{
+					current--;
+				}
+				else
+				{
+					current++;
+				}
+
+				current = max(current, 0);
+				current = min(current, c - 1);
+
+				pane->m_tab.setCurrentIndex(current);
+				pane->m_tab.changeCurrent();
 			}
 
 			break;
