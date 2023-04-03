@@ -139,15 +139,18 @@ void TabControl::changeCurrent()
 			MY_TRACE(_T("%ws を表示します\n"), (BSTR)shuttle->m_name);
 
 			::ShowWindow(shuttle->m_hwnd, SW_SHOW);
-//			::ShowWindow(shuttle->m_dockContainer->m_hwnd, SW_SHOW);
+			::ShowWindow(shuttle->m_dockContainer->m_hwnd, SW_SHOW);
 		}
 		else
 		{
 			MY_TRACE(_T("%ws を非表示にします\n"), (BSTR)shuttle->m_name);
 
 			::ShowWindow(shuttle->m_hwnd, SW_HIDE);
-//			::ShowWindow(shuttle->m_dockContainer->m_hwnd, SW_HIDE);
+			::ShowWindow(shuttle->m_dockContainer->m_hwnd, SW_HIDE);
 		}
+
+		MY_TRACE(_T("%d\n"), ::IsWindowVisible(shuttle->m_hwnd));
+		MY_TRACE(_T("%d\n"), ::IsWindowVisible(shuttle->m_dockContainer->m_hwnd));
 	}
 
 	Pane* pane = getPane(m_hwnd);

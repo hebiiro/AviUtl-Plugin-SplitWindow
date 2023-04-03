@@ -19,6 +19,7 @@ public:
 
 	void insert(HWND colony);
 	void erase(HWND colony);
+	void eraseInternal(HWND colony);
 	void clear();
 };
 

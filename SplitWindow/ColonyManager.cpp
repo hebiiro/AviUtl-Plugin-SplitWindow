@@ -121,27 +121,35 @@ void ColonyManager::erase(HWND colony)
 		}
 	}
 
+	eraseInternal(colony);
+}
+
+void ColonyManager::eraseInternal(HWND colony)
+{
 	// ルートペインを取得する。
 	PanePtr* root = (PanePtr*)::RemoveProp(colony, _T("SplitWindow.RootPane"));
 
-	// ドッキング中のウィンドウが削除されないようにルートペインをリセットする。
-	if (colony != g_hub)
+	// コロニーがハブではないなら
+	if (root && colony != g_hub)
+	{
+		// ドッキング中のウィンドウが削除されないようにルートペインをリセットする。
 		root->get()->resetPane();
 
-	// ルートペインを削除する。
-	delete root;
+		// ルートペインを削除する。
+		delete root;
+	}
 }
 
 void ColonyManager::clear()
 {
-	// ::DestroyWindow(colony) でコレクションの要素が減るのでコレクションをコピーしておく。
-	auto colonyArray = m_array;
-
 	// 全てのコロニーを削除する。
-	for (auto colony : colonyArray)
+	for (auto colony : m_array)
+	{
+		eraseInternal(colony);
 		::DestroyWindow(colony);
+	}
 
-	// 念のためクリアする。
+	// コレクションをクリアする。
 	m_array.clear();
 }
 
