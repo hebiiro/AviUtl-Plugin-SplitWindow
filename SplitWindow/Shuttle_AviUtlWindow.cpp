@@ -47,6 +47,9 @@ LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT mess
 
 			if (m_pane)
 			{
+				// タブのテキストを更新する。
+				m_pane->m_tab.changeText(this, (LPCTSTR)lParam);
+
 				// ペインのタイトル部分を再描画する。
 				::InvalidateRect(m_pane->m_owner, &m_pane->m_position, FALSE);
 			}
@@ -68,7 +71,12 @@ LRESULT AviUtlWindow::onTargetWndProc(Container* container, HWND hwnd, UINT mess
 			{
 				::StringCbCopyA(fileName, sizeof(fileName), "無題");
 			}
+#if 1
+			::StringCbCatA(fileName, sizeof(fileName), " - ");
+			::StringCbCatA(fileName, sizeof(fileName), (LPCSTR)lParam);
+#else
 			::StringCbCatA(fileName, sizeof(fileName), " - AviUtl");
+#endif
 			::SetWindowTextA(g_hub, fileName);
 
 			return container->onTargetWndProc(hwnd, message, wParam, lParam);

@@ -61,7 +61,7 @@ LRESULT SettingDialog::onTargetWndProc(Container* container, HWND hwnd, UINT mes
 			// カレントオブジェクトが存在しない場合は WM_PAINT を処理してはならない。
 
 			int objectIndex = g_auin.GetCurrentObjectIndex();
-			MY_TRACE_INT(objectIndex);
+//			MY_TRACE_INT(objectIndex);
 
 			if (objectIndex < 0)
 				return 0;
