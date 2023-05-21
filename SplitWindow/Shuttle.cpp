@@ -127,6 +127,8 @@ LRESULT Shuttle::onTargetWndProc(Container* container, HWND hwnd, UINT message, 
 		}
 	case WM_SETTEXT:
 		{
+//			MY_TRACE(_T("WM_SETTEXT, 0x%08X, 0x%08X\n"), wParam, lParam);
+
 			// コンテナのウィンドウテキストを更新する。
 			::SetWindowText(::GetParent(hwnd), (LPCTSTR)lParam);
 

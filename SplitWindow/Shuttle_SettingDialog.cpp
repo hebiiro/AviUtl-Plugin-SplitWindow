@@ -51,8 +51,23 @@ LRESULT SettingDialog::onContainerWndProc(Container* container, HWND hwnd, UINT 
 
 LRESULT SettingDialog::onTargetWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+//	MY_TRACE(_T("SettingDialog : 0x%08X, 0x%08X, 0x%08X\n"), message, wParam, lParam);
+
 	switch (message)
 	{
+	case WM_PAINT:
+		{
+			// 「拡張編集」用。
+			// カレントオブジェクトが存在しない場合は WM_PAINT を処理してはならない。
+
+			int objectIndex = g_auin.GetCurrentObjectIndex();
+			MY_TRACE_INT(objectIndex);
+
+			if (objectIndex < 0)
+				return 0;
+
+			break;
+		}
 	case WM_SIZE:
 		{
 			// 「patch.aul」用。
