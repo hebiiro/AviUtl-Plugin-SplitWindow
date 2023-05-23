@@ -104,6 +104,24 @@ BOOL exportLayout(HWND hwnd)
 
 //---------------------------------------------------------------------
 
+void updateHubMenu()
+{
+	HMENU menu = ::GetMenu(g_hub);
+
+	LPCTSTR text = _T("再生時最大化 OFF");
+	if (g_showPlayer) text = _T("再生時最大化 ON");
+
+	MENUITEMINFO mii = { sizeof(mii) };
+	mii.fMask = MIIM_STRING;
+	mii.dwTypeData = (LPTSTR)text;
+
+	::SetMenuItemInfo(menu, CommandID::MAXIMIZE_PLAY, FALSE, &mii);
+
+	::DrawMenuBar(g_hub);
+}
+
+//---------------------------------------------------------------------
+
 // シングルウィンドウのウィンドウ関数。
 LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -149,6 +167,22 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			MY_TRACE(_T("hubProc(WM_COMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
+			UINT id = LOWORD(wParam);
+
+			switch (id)
+			{
+			case CommandID::MAXIMIZE_PLAY:
+				{
+					MY_TRACE(_T("CommandID::MAXIMIZE_PLAY\n"));
+
+					g_showPlayer = !g_showPlayer;
+
+					updateHubMenu();
+
+					break;
+				}
+			}
+
 			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 		}
 	case WM_SYSCOMMAND:
@@ -174,7 +208,11 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case CommandID::SHOW_CONFIG_DIALOG:
 				{
 					// SplitWindow の設定ダイアログを開く。
-					showConfigDialog(hwnd);
+					if (IDOK == showConfigDialog(hwnd))
+					{
+						// 設定が変更された可能性があるので、ハブのメニューを更新する。
+						updateHubMenu();
+					}
 
 					break;
 				}
@@ -266,7 +304,8 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WindowMessage::WM_POST_INIT: // 最後の初期化処理。
 		{
 			// 設定をファイルから読み込む。
-			loadConfig();
+			if (loadConfig() == S_OK)
+				updateHubMenu();
 
 			// シングルウィンドウが非表示なら表示する。
 			if (!::IsWindowVisible(hwnd))

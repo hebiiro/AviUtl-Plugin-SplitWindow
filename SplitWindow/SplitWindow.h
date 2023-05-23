@@ -42,6 +42,8 @@ struct CommandID
 	static const UINT IS_BORDER_LOCKED = 1014;
 	static const UINT RENAME_COLONY = 1015;
 	static const UINT WINDOW = 2000;
+
+	static const UINT MAXIMIZE_PLAY = 30000;
 };
 
 struct TabMode
@@ -109,6 +111,7 @@ HWND createExplorer(LPCTSTR name);
 LRESULT CALLBACK explorerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HWND createHub();
+void updateHubMenu();
 LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HRESULT loadConfig();

@@ -351,6 +351,12 @@ IMPLEMENT_HOOK_PROC(BOOL, WINAPI, SetMenu, (HWND hwnd, HMENU menu))
 
 	hwnd = getMenuOwner(hwnd);
 
+	if (hwnd == g_hub)
+	{
+		if (::GetMenuState(menu, CommandID::MAXIMIZE_PLAY, MF_BYCOMMAND) == -1)
+			::AppendMenu(menu, MF_STRING, CommandID::MAXIMIZE_PLAY, _T(""));
+	}
+
 	return true_SetMenu(hwnd, menu);
 }
 
@@ -581,33 +587,60 @@ IMPLEMENT_HOOK_PROC_NULL(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT
 	return result;
 }
 
-static WINDOWPLACEMENT g_wp = { sizeof(g_wp) };
-
-void begin_aviutl_PlayMain()
+struct WindowPlacement
 {
-	MY_TRACE(_T("begin_aviutl_PlayMain()\n"));
+	HWND hwnd;
+	WINDOWPLACEMENT wp = { sizeof(wp) };
 
-	if (!g_showPlayer) return;
-
-	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
-
-	if (!g_movieplaymain)
+	WindowPlacement(HWND hwnd)
+		: hwnd(hwnd)
 	{
-		ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"再生ウィンドウ");
-		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
+		// ウィンドウの位置を取得する。
+		::GetWindowPlacement(hwnd, &wp);
+
+		// ウィンドウを最大化する。
+		::ShowWindow(hwnd, SW_MAXIMIZE);
+
+		// ウィンドウを一番手前に持ってくる。
+		::SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	}
 
-	::GetWindowPlacement(hwnd, &g_wp);
-	::ShowWindow(hwnd, SW_MAXIMIZE);
-	::SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	~WindowPlacement()
+	{
+		// ウィンドウの位置を元に戻す。
+		::SetWindowPlacement(hwnd, &wp);
+	}
+};
+
+__declspec(naked) UINT __fastcall call_aviutl_PlayMain(UINT u1, UINT u2, UINT u3, UINT u4, UINT u5, UINT u6)
+{
+	// true_aviutl_PlayMain() は __fastcall で始まり、__cdecl で終わるので、それに合わせてアセンブラで調整する。
+
+	__asm {
+		// __fastcall として引数を積み直す。
+		MOV EAX, [ESP+0x10] // u6
+		PUSH EAX // u6
+		MOV EAX, [ESP+0x10] // u5
+		PUSH EAX // u5
+		MOV EAX, [ESP+0x10] // u4
+		PUSH EAX // u4
+		MOV EAX, [ESP+0x10] // u3
+		PUSH EAX // u3
+		CALL true_aviutl_PlayMain // u1, u2 は ECX, EDX
+		ADD ESP, 0x10 // true_aviutl_PlayMain() は __cdecl で終わる
+		RETN 0x10 // __fastcall で終わる
+	}
 }
 
-void end_aviutl_PlayMain()
+UINT __fastcall aviutl_PlayMain(UINT u1, UINT u2, UINT u3, UINT u4, UINT u5, UINT u6)
 {
-	MY_TRACE(_T("end_aviutl_PlayMain()\n"));
+	MY_TRACE(_T("aviutl_PlayMain()\n"));
 
-	if (!g_showPlayer) return;
+	// フラグが立っていない場合はデフォルト処理のみ行う。
+	if (!g_showPlayer)
+		return call_aviutl_PlayMain(u1, u2, u3, u4, u5, u6);
 
+	// AviUtl ウィンドウまたは再生ウィンドウを取得する。
 	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
 
 	if (!g_movieplaymain)
@@ -616,51 +649,59 @@ void end_aviutl_PlayMain()
 		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
 	}
 
-	::SetWindowPlacement(hwnd, &g_wp);
+	// ウィンドウを最大化する。その後、スコープから抜けたとき元に戻す。
+	WindowPlacement wp(hwnd);
+
+	// デフォルト処理。
+	return call_aviutl_PlayMain(u1, u2, u3, u4, u5, u6);
 }
 
 #define NAKED(type) __declspec(naked) type
 IMPLEMENT_HOOK_PROC_NULL(NAKED(UINT), __fastcall, aviutl_PlayMain, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5, UINT u6))
 {
+	// この関数は __fastcall で始まり、__cdecl で終わる。
+
 	__asm {
-push        ebp  
-mov         ebp,esp  
-sub         esp,0Ch  
-mov         dword ptr [ebp-8],edx  
-mov         dword ptr [ebp-0Ch],ecx  
-
-call        begin_aviutl_PlayMain
-
-mov         eax,dword ptr [ebp+14h]  
-push        eax  
-mov         ecx,dword ptr [ebp+10h]  
-push        ecx  
-mov         edx,dword ptr [ebp+0Ch]  
-push        edx  
-mov         eax,dword ptr [ebp+8]  
-push        eax  
-mov         edx,dword ptr [ebp-8]
-mov         ecx,dword ptr [ebp-0Ch]
-call        true_aviutl_PlayMain
-add         esp,10h  
-mov         dword ptr [ebp-4],eax  
-
-call        end_aviutl_PlayMain
-
-mov         eax,dword ptr [ebp-4]  
-
-mov         esp,ebp  
-pop         ebp  
-ret
-	};
+		// 引数を積み直す。
+		MOV EAX, [ESP+0x10] // u6
+		PUSH EAX // u6
+		MOV EAX, [ESP+0x10] // u5
+		PUSH EAX // u5
+		MOV EAX, [ESP+0x10] // u4
+		PUSH EAX // u4
+		MOV EAX, [ESP+0x10] // u3
+		PUSH EAX // u3
+		CALL aviutl_PlayMain // u1, u2 は ECX, EDX
+		RET // __cdecl で終わる
+	}
 }
 
-void begin_aviutl_PlaySub()
+__declspec(naked) UINT __fastcall call_aviutl_PlaySub(UINT u1, UINT u2, UINT u3, UINT u4, UINT u5)
+{
+	// true_aviutl_PlaySub() は __fastcall で始まり、__cdecl で終わるので、それに合わせてアセンブラで調整する。
+
+	__asm {
+		MOV EAX, [ESP+0x0C] // u5
+		PUSH EAX // u5
+		MOV EAX, [ESP+0x0C] // u4
+		PUSH EAX // u4
+		MOV EAX, [ESP+0x0C] // u3
+		PUSH EAX // u3
+		CALL true_aviutl_PlaySub
+		ADD ESP, 0x0C
+		RETN 0x0C
+	}
+}
+
+UINT __fastcall aviutl_PlaySub(UINT u1, UINT u2, UINT u3, UINT u4, UINT u5)
 {
 	MY_TRACE(_T("begin_aviutl_PlaySub()\n"));
 
-	if (!g_showPlayer) return;
+	// フラグが立っていない場合はデフォルト処理のみ行う。
+	if (!g_showPlayer)
+		return call_aviutl_PlaySub(u1, u2, u3, u4, u5);
 
+	// AviUtl ウィンドウまたは再生ウィンドウを取得する。
 	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
 
 	if (!g_movieplaymain)
@@ -669,60 +710,29 @@ void begin_aviutl_PlaySub()
 		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
 	}
 
-	::GetWindowPlacement(hwnd, &g_wp);
-	::ShowWindow(hwnd, SW_MAXIMIZE);
-	::SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-}
+	// ウィンドウを最大化する。その後、スコープから抜けたとき元に戻す。
+	WindowPlacement wp(hwnd);
 
-void end_aviutl_PlaySub()
-{
-	MY_TRACE(_T("end_aviutl_PlaySub()\n"));
-
-	if (!g_showPlayer) return;
-
-	HWND hwnd = ::GetParent(g_aviutlWindow->m_hwnd);
-
-	if (!g_movieplaymain)
-	{
-		ShuttlePtr shuttle = g_shuttleManager.getShuttle(L"再生ウィンドウ");
-		if (shuttle) hwnd = ::GetParent(shuttle->m_hwnd);
-	}
-
-	::SetWindowPlacement(hwnd, &g_wp);
+	// デフォルト処理。
+	return call_aviutl_PlaySub(u1, u2, u3, u4, u5);
 }
 
 #define NAKED(type) __declspec(naked) type
 IMPLEMENT_HOOK_PROC_NULL(NAKED(UINT), __fastcall, aviutl_PlaySub, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5))
 {
+	// この関数は __fastcall で始まり、__cdecl で終わる。
+
 	__asm {
-push        ebp  
-mov         ebp,esp  
-sub         esp,0Ch  
-mov         dword ptr [ebp-8],edx  
-mov         dword ptr [ebp-0Ch],ecx  
-
-call        begin_aviutl_PlaySub
-
-mov         ecx,dword ptr [ebp+10h]  
-push        ecx  
-mov         edx,dword ptr [ebp+0Ch]  
-push        edx  
-mov         eax,dword ptr [ebp+8]  
-push        eax  
-mov         edx,dword ptr [ebp-8]
-mov         ecx,dword ptr [ebp-0Ch]
-call        true_aviutl_PlaySub
-add         esp,0Ch  
-mov         dword ptr [ebp-4],eax  
-
-call        end_aviutl_PlaySub
-
-mov         eax,dword ptr [ebp-4]  
-
-mov         esp,ebp  
-pop         ebp  
-ret
-	};
+		// 引数を積み直す。
+		MOV EAX, [ESP+0x0C] // u5
+		PUSH EAX // u5
+		MOV EAX, [ESP+0x0C] // u4
+		PUSH EAX // u4
+		MOV EAX, [ESP+0x0C] // u3
+		PUSH EAX // u3
+		CALL aviutl_PlaySub // u1, u2 は ECX, EDX
+		RET // __cdecl で終わる
+	}
 }
 
 COLORREF WINAPI Dropper_GetPixel(HDC _dc, int x, int y)
