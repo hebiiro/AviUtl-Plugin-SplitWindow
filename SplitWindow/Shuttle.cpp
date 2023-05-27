@@ -87,7 +87,12 @@ DWORD Shuttle::onGetTargetNewStyle()
 
 void Shuttle::onSetTargetWindowPos(LPRECT rc)
 {
-	// デフォルトでは何もしない。
+	// スクロールバーがあるときは、その分矩形を縮小する。
+
+	DWORD style = ::GetWindowLong(m_hwnd, GWL_STYLE);
+
+	if (style & WS_VSCROLL) rc->right -= ::GetSystemMetrics(SM_CXVSCROLL);
+	if (style & WS_HSCROLL) rc->bottom -= ::GetSystemMetrics(SM_CYHSCROLL);
 }
 
 LRESULT Shuttle::onContainerWndProc(Container* container, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
