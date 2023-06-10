@@ -140,6 +140,20 @@ void hookExEdit()
 			MY_TRACE_HEX(true_extoolbar_GetMenuState);
 		}
 	}
+
+	{
+		// ZRamPreview.auf 内の ::GetMenuItemCount() をフックする。
+
+		HMODULE ZRamPreview = ::GetModuleHandle(_T("ZRamPreview.auf"));
+		MY_TRACE_HEX(ZRamPreview);
+
+		if (ZRamPreview)
+		{
+			true_ZRamPreview_GetMenuItemCount = hookImportFunc(
+				ZRamPreview, "GetMenuItemCount", hook_ZRamPreview_GetMenuItemCount);
+			MY_TRACE_HEX(true_ZRamPreview_GetMenuItemCount);
+		}
+	}
 }
 
 //---------------------------------------------------------------------
@@ -585,6 +599,18 @@ IMPLEMENT_HOOK_PROC_NULL(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT
 	UINT result = true_extoolbar_GetMenuState(menu, id, flags);
 	if (result == -1) return 0;
 	return result;
+}
+
+IMPLEMENT_HOOK_PROC_NULL(int, WINAPI, ZRamPreview_GetMenuItemCount, (HMENU menu))
+{
+	MY_TRACE(_T("ZRamPreview_GetMenuItemCount(0x%08X)\n"), menu);
+
+	// 「拡張編集RAMプレビュー」用。
+
+	if (menu == ::GetMenu(g_hub))
+		return 7; // メインウィンドウのメニューの場合は固定値を返す。
+
+	return true_ZRamPreview_GetMenuItemCount(menu);
 }
 
 struct WindowPlacement

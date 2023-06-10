@@ -147,6 +147,7 @@ SplitWindow.xml をテキストエディタで開いて編集します。
 
 ## 更新履歴
 
+* 4.4.2 - 2023/06/10 「拡張編集RAMプレビュー」でエラーが出ていた問題を修正
 * 4.4.1 - 2023/05/27 「波形プレビュー」でスクロールバーが表示されなかった問題を修正
 * 4.4.0 - 2023/05/23 再生時最大化機能をメニューで簡単に切り替えられるように変更
 * 4.3.3 - 2023/05/21 AviUtl ウィンドウをドッキングしているときタブのテキストが更新されない問題を修正
@@ -203,7 +204,7 @@ SplitWindow.xml をテキストエディタで開いて編集します。
 * Common Library https://github.com/hebiiro/Common-Library
 
 ## 作成者情報
- 
+
 * 作成者 - 蛇色 (へびいろ)
 * GitHub - https://github.com/hebiiro
 * Twitter - https://twitter.com/io_hebiiro

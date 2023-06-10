@@ -151,6 +151,7 @@ DECLARE_HOOK_PROC(INT_PTR, WINAPI, vsthost_DialogBoxIndirectParamA, (HINSTANCE i
 DECLARE_HOOK_PROC(HWND, WINAPI, color_palette_CreateDialogParamA, (HINSTANCE instance, LPCSTR templateName, HWND parent, DLGPROC dlgProc, LPARAM initParam));
 DECLARE_HOOK_PROC(BOOL, WINAPI, color_palette_ShowWindow, (HWND hwnd, int cmdShow));
 DECLARE_HOOK_PROC(UINT, WINAPI, extoolbar_GetMenuState, (HMENU menu, UINT id, UINT flags));
+DECLARE_HOOK_PROC(int, WINAPI, ZRamPreview_GetMenuItemCount, (HMENU menu));
 DECLARE_HOOK_PROC(UINT, __fastcall, aviutl_PlayMain, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5, UINT u6));
 DECLARE_HOOK_PROC(UINT, __fastcall, aviutl_PlaySub, (UINT u1, UINT u2, UINT u3, UINT u4, UINT u5));
 
