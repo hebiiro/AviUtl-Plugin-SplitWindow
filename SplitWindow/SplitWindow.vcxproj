@@ -229,6 +229,7 @@
     <ClCompile Include="SplitWindow_Explorer.cpp" />
     <ClCompile Include="SplitWindow_Hook.cpp" />
     <ClCompile Include="SplitWindow_Hub.cpp" />
+    <ClCompile Include="SplitWindow_PSDToolKit.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SplitWindow.def" />

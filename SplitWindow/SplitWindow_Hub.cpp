@@ -3,16 +3,18 @@
 #include "ConfigDialog.h"
 
 //---------------------------------------------------------------------
+namespace Hub {
+//---------------------------------------------------------------------
 
 // 他のウィンドウの土台となるシングルウィンドウを作成する。
-HWND createHub()
+HWND create()
 {
-	MY_TRACE(_T("createHub()\n"));
+	MY_TRACE(_T("Hub::create()\n"));
 
 	WNDCLASS wc = {};
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 	wc.hCursor = ::LoadCursor(0, IDC_ARROW);
-	wc.lpfnWndProc = hubProc;
+	wc.lpfnWndProc = Hub::wndProc;
 	wc.hInstance = g_instance;
 	wc.lpszClassName = _T("AviUtl"); // クラス名を AviUtl に偽装する。「AoiSupport」用。
 	::RegisterClass(&wc);
@@ -27,6 +29,22 @@ HWND createHub()
 		0, 0, g_instance, 0);
 
 	return hwnd;
+}
+
+void initSystemMenu()
+{
+	HMENU menu = ::GetSystemMenu(g_hub, FALSE);
+	int index = 0;
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::CREATE_COLONY, _T("コロニーを新規作成"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::CREATE_EXPLORER, _T("エクスプローラを新規作成"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::IMPORT_LAYOUT, _T("レイアウトのインポート"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::EXPORT_LAYOUT, _T("レイアウトのエクスポート"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::SHOW_CONFIG_DIALOG, _T("SplitWindowの設定"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_POPUP, (UINT)g_colonyMenu, _T("コロニー"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_POPUP, (UINT)g_explorerMenu, _T("エクスプローラ"));
+	if (::GetModuleHandle(_T("PSDToolKit.auf")))
+		::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::SHOW_PSD_TOOL_KIT, _T("PSDToolKit(外部)を表示"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 }
 
 //---------------------------------------------------------------------
@@ -104,7 +122,7 @@ BOOL exportLayout(HWND hwnd)
 
 //---------------------------------------------------------------------
 
-void updateHubMenu()
+void updateMenu()
 {
 	HMENU menu = ::GetMenu(g_hub);
 
@@ -123,7 +141,7 @@ void updateHubMenu()
 //---------------------------------------------------------------------
 
 // シングルウィンドウのウィンドウ関数。
-LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -136,13 +154,13 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SYSCHAR:
 	case WM_SYSDEADCHAR:
 		{
-			MY_TRACE(_T("hubProc(WM_***KEY***, 0x%08X, 0x%08X, 0x%08X)\n"), message, wParam, lParam);
+			MY_TRACE(_T("Hub::wndProc(WM_***KEY***, 0x%08X, 0x%08X, 0x%08X)\n"), message, wParam, lParam);
 
 			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 		}
 	case WM_ACTIVATE: // 「patch.aul」用。
 		{
-			MY_TRACE(_T("hubProc(WM_ACTIVATE, 0x%08X, 0x%08X)\n"), wParam, lParam);
+			MY_TRACE(_T("Hub::wndProc(WM_ACTIVATE, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			if (LOWORD(wParam) == WA_INACTIVE)
 				::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
@@ -151,7 +169,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	case WM_MENUSELECT: // 「patch.aul」用。
 		{
-			MY_TRACE(_T("hubProc(WM_MENUSELECT, 0x%08X, 0x%08X)\n"), wParam, lParam);
+			MY_TRACE(_T("Hub::wndProc(WM_MENUSELECT, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 
@@ -159,13 +177,13 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	case WM_CLOSE:
 		{
-			MY_TRACE(_T("hubProc(WM_CLOSE, 0x%08X, 0x%08X)\n"), wParam, lParam);
+			MY_TRACE(_T("Hub::wndProc(WM_CLOSE, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			return ::SendMessage(g_aviutlWindow->m_hwnd, message, wParam, lParam);
 		}
 	case WM_COMMAND:
 		{
-			MY_TRACE(_T("hubProc(WM_COMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
+			MY_TRACE(_T("Hub::wndProc(WM_COMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			UINT id = LOWORD(wParam);
 
@@ -177,7 +195,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 					g_showPlayer = !g_showPlayer;
 
-					updateHubMenu();
+					updateMenu();
 
 					break;
 				}
@@ -187,7 +205,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	case WM_SYSCOMMAND:
 		{
-			MY_TRACE(_T("hubProc(WM_SYSCOMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
+			MY_TRACE(_T("Hub::wndProc(WM_SYSCOMMAND, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			if (wParam >= CommandID::COLONY_BEGIN &&
 				wParam < CommandID::COLONY_END)
@@ -211,7 +229,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 					if (IDOK == showConfigDialog(hwnd))
 					{
 						// 設定が変更された可能性があるので、ハブのメニューを更新する。
-						updateHubMenu();
+						updateMenu();
 					}
 
 					break;
@@ -244,6 +262,12 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 					break;
 				}
+			case CommandID::SHOW_PSD_TOOL_KIT:
+				{
+					PSDToolKit::showHolder();
+
+					break;
+				}
 			case SC_RESTORE:
 			case SC_MINIMIZE: // 「patch.aul」用。
 				{
@@ -267,7 +291,7 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	case WM_CREATE:
 		{
-			MY_TRACE(_T("hubProc(WM_CREATE)\n"));
+			MY_TRACE(_T("Hub::wndProc(WM_CREATE)\n"));
 
 			g_theme = ::OpenThemeData(hwnd, VSCLASS_WINDOW);
 			MY_TRACE_HEX(g_theme);
@@ -278,22 +302,11 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			g_explorerMenu = ::CreatePopupMenu();
 			MY_TRACE_HEX(g_explorerMenu);
 
-			HMENU menu = ::GetSystemMenu(hwnd, FALSE);
-			int index = 0;
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::CREATE_COLONY, _T("コロニーを新規作成"));
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::CREATE_EXPLORER, _T("エクスプローラを新規作成"));
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::IMPORT_LAYOUT, _T("レイアウトのインポート"));
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::EXPORT_LAYOUT, _T("レイアウトのエクスポート"));
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::SHOW_CONFIG_DIALOG, _T("SplitWindowの設定"));
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_POPUP, (UINT)g_colonyMenu, _T("コロニー"));
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_POPUP, (UINT)g_explorerMenu, _T("エクスプローラ"));
-			::InsertMenu(menu, index++, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
-
 			break;
 		}
 	case WM_DESTROY:
 		{
-			MY_TRACE(_T("hubProc(WM_DESTROY)\n"));
+			MY_TRACE(_T("Hub::wndProc(WM_DESTROY)\n"));
 
 			::DestroyMenu(g_explorerMenu), g_explorerMenu = 0;
 			::DestroyMenu(g_colonyMenu), g_colonyMenu = 0;
@@ -303,9 +316,12 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	case WindowMessage::WM_POST_INIT: // 最後の初期化処理。
 		{
+			// システムメニューに独自の項目を追加する。
+			initSystemMenu();
+
 			// 設定をファイルから読み込む。
 			if (loadConfig() == S_OK)
-				updateHubMenu();
+				updateMenu();
 
 			// シングルウィンドウが非表示なら表示する。
 			if (!::IsWindowVisible(hwnd))
@@ -325,4 +341,6 @@ LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return colonyProc(hwnd, message, wParam, lParam);
 }
 
+//---------------------------------------------------------------------
+} // namespace Hub
 //---------------------------------------------------------------------

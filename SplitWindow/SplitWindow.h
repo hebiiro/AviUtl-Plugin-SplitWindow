@@ -31,6 +31,7 @@ struct CommandID
 	static const UINT EXPORT_LAYOUT = 1002;
 	static const UINT CREATE_COLONY = 1003;
 	static const UINT CREATE_EXPLORER = 1004;
+	static const UINT SHOW_PSD_TOOL_KIT = 1005;
 	
 	static const UINT SPLIT_MODE_NONE = 1000;
 	static const UINT SPLIT_MODE_VERT = 1001;
@@ -110,9 +111,18 @@ LRESULT CALLBACK colonyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 HWND createExplorer(LPCTSTR name);
 LRESULT CALLBACK explorerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-HWND createHub();
-void updateHubMenu();
-LRESULT CALLBACK hubProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+namespace PSDToolKit {
+	HWND createHolder();
+	void showHolder();
+	LRESULT CALLBACK holderProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+} // namespace PSDToolKit
+
+namespace Hub {
+	HWND create();
+	void initSystemMenu();
+	void updateMenu();
+	LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+} // namespace Hub
 
 HRESULT loadConfig();
 HRESULT loadConfig(LPCWSTR fileName, BOOL _import);

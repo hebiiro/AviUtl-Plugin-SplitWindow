@@ -182,7 +182,7 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 		g_auin.initAviUtlAddress();
 
 		// 土台となるシングルウィンドウを作成する。
-		g_hub = createHub();
+		g_hub = Hub::create();
 
 		// コンテナのウィンドウクラスを登録する。
 		Container::registerWndClass();
@@ -231,6 +231,9 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 		// 設定ダイアログ用のシャトルの初期化。
 		g_shuttleManager.addShuttle(g_settingDialog, _T("* 設定ダイアログ"), hwnd);
 		::SetProp(g_hub, _T("SettingDialog"), hwnd);
+
+		// PSDToolKit ウィンドウ用のシャトルの初期化。
+		PSDToolKit::createHolder();
 
 		// すべてのウィンドウの初期化処理が終わったので
 		// ポストメッセージ先で最初のレイアウト計算を行う。
