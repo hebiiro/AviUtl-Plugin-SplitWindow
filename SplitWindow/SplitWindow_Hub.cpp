@@ -44,6 +44,7 @@ void initSystemMenu()
 	::InsertMenu(menu, index++, MF_BYPOSITION | MF_POPUP, (UINT)g_explorerMenu, _T("エクスプローラ"));
 	if (::GetModuleHandle(_T("PSDToolKit.auf")))
 		::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::SHOW_PSD_TOOL_KIT, _T("PSDToolKit(外部)を表示"));
+	::InsertMenu(menu, index++, MF_BYPOSITION | MF_STRING, CommandID::SHOW_BOUYOMISAN, _T("棒読みさんを表示"));
 	::InsertMenu(menu, index++, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 }
 
@@ -265,6 +266,12 @@ LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case CommandID::SHOW_PSD_TOOL_KIT:
 				{
 					PSDToolKit::showHolder();
+
+					break;
+				}
+			case CommandID::SHOW_BOUYOMISAN:
+				{
+					Bouyomisan::showHolder();
 
 					break;
 				}

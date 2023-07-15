@@ -105,6 +105,7 @@
       <Filter>Element</Filter>
     </ClCompile>
     <ClCompile Include="SplitWindow_PSDToolKit.cpp" />
+    <ClCompile Include="SplitWindow_Bouyomisan.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

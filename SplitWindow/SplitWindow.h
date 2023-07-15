@@ -32,6 +32,7 @@ struct CommandID
 	static const UINT CREATE_COLONY = 1003;
 	static const UINT CREATE_EXPLORER = 1004;
 	static const UINT SHOW_PSD_TOOL_KIT = 1005;
+	static const UINT SHOW_BOUYOMISAN = 1006;
 	
 	static const UINT SPLIT_MODE_NONE = 1000;
 	static const UINT SPLIT_MODE_VERT = 1001;
@@ -116,6 +117,12 @@ namespace PSDToolKit {
 	void showHolder();
 	LRESULT CALLBACK holderProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 } // namespace PSDToolKit
+
+namespace Bouyomisan {
+	HWND createHolder();
+	void showHolder();
+	LRESULT CALLBACK holderProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+} // namespace Bouyomisan
 
 namespace Hub {
 	HWND create();

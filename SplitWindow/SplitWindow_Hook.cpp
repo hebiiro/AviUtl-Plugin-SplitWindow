@@ -235,6 +235,9 @@ IMPLEMENT_HOOK_PROC_NULL(HWND, WINAPI, CreateWindowExA, (DWORD exStyle, LPCSTR c
 		// PSDToolKit ウィンドウ用のシャトルの初期化。
 		PSDToolKit::createHolder();
 
+		// Bouyomisan ウィンドウ用のシャトルの初期化。
+		Bouyomisan::createHolder();
+
 		// すべてのウィンドウの初期化処理が終わったので
 		// ポストメッセージ先で最初のレイアウト計算を行う。
 		::PostMessage(g_hub, WindowMessage::WM_POST_INIT, 0, 0);
